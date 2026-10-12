@@ -329,3 +329,17 @@
     @apply bg-accent text-accent-foreground;
   }
 }
+
+/* Universal button active tactile click effect */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  transition:
+    transform 0.1s cubic-bezier(0.2, 0, 0, 1),
+    filter 0.1s ease;
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.96) !important;
+  filter: brightness(0.92) contrast(1.05) !important;
+}
