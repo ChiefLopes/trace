@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -61,9 +62,17 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
         />
         <Link
           href="/"
-          className="font-display text-xl leading-[1.62] font-black tracking-wide uppercase lg:text-[24px]"
+          className="group flex items-center gap-2.5 font-display text-xl leading-[1.62] font-black tracking-wide uppercase lg:text-[24px]"
         >
-          {siteConfig.name}
+          <Image
+            src="/avatar.svg"
+            alt="TRACE Logo"
+            width={36}
+            height={36}
+            priority
+            className="size-7 rounded-lg object-contain shadow-[0_0_12px_rgba(252,163,17,0.35)] transition-transform group-hover:scale-105 sm:size-8 lg:size-9"
+          />
+          <span>{siteConfig.name}</span>
         </Link>
         {/* Reads the session cookie: streamed in its own boundary so the shell isn't held up. */}
         <Suspense fallback={<UserMenuPlaceholder />}>

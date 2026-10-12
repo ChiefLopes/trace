@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -31,9 +32,17 @@ export function SiteHeader() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 sm:px-8">
         <Link
           href="/"
-          className="font-display text-lg font-black tracking-wider uppercase sm:text-xl"
+          className="group flex items-center gap-2.5 font-display text-lg font-black tracking-wider uppercase sm:text-xl"
         >
-          {siteConfig.name}
+          <Image
+            src="/avatar.svg"
+            alt="TRACE Logo"
+            width={32}
+            height={32}
+            priority
+            className="size-7 rounded-lg object-contain shadow-[0_0_12px_rgba(252,163,17,0.35)] transition-transform group-hover:scale-105 sm:size-8"
+          />
+          <span>{siteConfig.name}</span>
         </Link>
 
         <nav aria-label="Main" className="hidden md:block">
