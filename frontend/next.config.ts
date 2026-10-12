@@ -60,7 +60,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     // Backend-for-frontend proxy: the browser only ever talks to this origin, so
     // the backend needs no CORS setup and its URL stays out of the client bundle.
-    return [{ source: "/api/:path*", destination: `${apiBaseUrl}/:path*` }];
+    return [{ source: "/api/:path*", destination: `${apiBaseUrl}/api/:path*` }];
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

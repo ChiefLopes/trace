@@ -1,9 +1,19 @@
+"use client";
+
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 import { renderHighlights } from "@/lib/text/highlight";
+import { cn } from "@/lib/utils/cn";
 
 import type { CaseBrief } from "../data";
 
@@ -16,10 +26,12 @@ import type { CaseBrief } from "../data";
 function SectionHeading({
   id,
   underline,
+  active,
   children,
 }: {
   id: string;
   underline: number;
+  active: boolean;
   children: ReactNode;
 }) {
   return (
@@ -27,8 +39,74 @@ function SectionHeading({
       <h2 id={id} className="font-display text-[20px] leading-[1.62] font-black uppercase">
         {children}
       </h2>
-      <span aria-hidden className="h-[3px] bg-accent" style={{ width: underline }} />
+      <span
+        aria-hidden
+        className="h-[3px] bg-accent shadow-[0_0_10px_var(--accent)] transition-all duration-500 ease-out"
+        style={{ width: active ? underline : 0 }}
+      />
     </div>
+  );
+}
+
+function Cursor() {
+  return (
+    <span
+      aria-hidden="true"
+      className="ml-1 inline-block h-[1.1em] w-[0.55em] animate-pulse rounded-[1px] bg-accent align-middle shadow-[0_0_8px_var(--accent)]"
+    />
+  );
+}
+
+interface HighlightToken {
+  text: string;
+  isHighlight: boolean;
+}
+
+interface ParsedParagraph {
+  raw: string;
+  tokens: HighlightToken[];
+  totalLength: number;
+}
+
+function parseParagraph(raw: string): ParsedParagraph {
+  const parts = raw.split(/(\{\{.+?\}\})/g).filter(Boolean);
+  const tokens: HighlightToken[] = parts.map((part) => {
+    if (part.startsWith("{{") && part.endsWith("}}")) {
+      return { text: part.slice(2, -2), isHighlight: true };
+    }
+    return { text: part, isHighlight: false };
+  });
+  const totalLength = tokens.reduce((sum, t) => sum + t.text.length, 0);
+  return { raw, tokens, totalLength };
+}
+
+function renderTypedTokens(tokens: HighlightToken[], visibleCount: number, showCursor: boolean) {
+  let remaining = visibleCount;
+  const elements: ReactNode[] = [];
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (remaining <= 0) break;
+    const token = tokens[i]!;
+    const sliceLen = Math.min(token.text.length, remaining);
+    const textSlice = token.text.slice(0, sliceLen);
+    remaining -= sliceLen;
+
+    if (token.isHighlight) {
+      elements.push(
+        <span key={i} className="font-semibold text-accent">
+          {textSlice}
+        </span>,
+      );
+    } else {
+      elements.push(<span key={i}>{textSlice}</span>);
+    }
+  }
+
+  return (
+    <>
+      {elements}
+      {showCursor && <Cursor />}
+    </>
   );
 }
 
@@ -56,27 +134,246 @@ type CaseBriefingProps = {
   proceedHref: Route;
 };
 
+function subscribeReducedMotion(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function getReducedMotionSnapshot() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
+}
+
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
+  );
+}
+
 export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [isFinished, setIsFinished] = useState(false);
+  const isComplete = prefersReducedMotion || isFinished;
+  const [numberChars, setNumberChars] = useState(0);
+  const [titleChars, setTitleChars] = useState(0);
+  const [briefHeadingVisible, setBriefHeadingVisible] = useState(false);
+  const [briefParaIndex, setBriefParaIndex] = useState(0);
+  const [briefCharIndex, setBriefCharIndex] = useState(0);
+  const [objectivesHeadingVisible, setObjectivesHeadingVisible] = useState(false);
+  const [objIndex, setObjIndex] = useState(0);
+  const [objCharIndex, setObjCharIndex] = useState(0);
+
+  const parsedBrief = useMemo(() => caseBrief.brief.map(parseParagraph), [caseBrief.brief]);
+
+  const handleSkip = useCallback(() => {
+    setIsFinished(true);
+  }, []);
+
+  // Keyboard shortcut: Space, Enter, or Escape to quickly skip
+  useEffect(() => {
+    if (isComplete) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === " " || e.key === "Enter" || e.key === "Escape") {
+        e.preventDefault();
+        handleSkip();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isComplete, handleSkip]);
+
+  // Main cinematic typewriter sequence
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let isCancelled = false;
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const numberText = caseBrief.number;
+    const titleText = caseBrief.title;
+    const objectives = caseBrief.objectives;
+
+    async function runTyping() {
+      // 1. Initial short pause
+      await sleep(150);
+      if (isCancelled) return;
+
+      // 2. Type Case Number ("CASE 001")
+      for (let i = 1; i <= numberText.length; i++) {
+        if (isCancelled) return;
+        setNumberChars(i);
+        await sleep(24);
+      }
+      await sleep(100);
+
+      // 3. Type Title ("TRACE THE MISSING 20 SOL")
+      for (let i = 1; i <= titleText.length; i++) {
+        if (isCancelled) return;
+        setTitleChars(i);
+        await sleep(18);
+      }
+      await sleep(160);
+
+      // 4. Reveal Headings with laser scanlines
+      setBriefHeadingVisible(true);
+      setObjectivesHeadingVisible(true);
+      await sleep(220);
+
+      // 5. Dual streams: Brief on the left, Objectives on the right
+      const briefPromise = (async () => {
+        for (let pIdx = 0; pIdx < parsedBrief.length; pIdx++) {
+          if (isCancelled) return;
+          setBriefParaIndex(pIdx);
+          const p = parsedBrief[pIdx]!;
+          for (let c = 1; c <= p.totalLength; c++) {
+            if (isCancelled) return;
+            setBriefCharIndex(c);
+            const isPunctuation = [".", ",", "!"].includes(p.raw[c - 1] ?? "");
+            await sleep(isPunctuation ? 26 : 12);
+          }
+          await sleep(75);
+        }
+        setBriefParaIndex(parsedBrief.length);
+      })();
+
+      const objectivesPromise = (async () => {
+        await sleep(200);
+        for (let oIdx = 0; oIdx < objectives.length; oIdx++) {
+          if (isCancelled) return;
+          setObjIndex(oIdx);
+          const objText = objectives[oIdx]!;
+          for (let c = 1; c <= objText.length; c++) {
+            if (isCancelled) return;
+            setObjCharIndex(c);
+            await sleep(11);
+          }
+          await sleep(65);
+        }
+        setObjIndex(objectives.length);
+      })();
+
+      await Promise.all([briefPromise, objectivesPromise]);
+      if (isCancelled) return;
+
+      await sleep(120);
+      setIsFinished(true);
+    }
+
+    runTyping();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [prefersReducedMotion, caseBrief, parsedBrief]);
+
   return (
-    <article className="lg:pt-[72px] lg:pl-[56px]">
+    <article
+      onClick={isComplete ? undefined : handleSkip}
+      className="relative cursor-default lg:pt-[72px] lg:pl-[56px]"
+    >
+      {/* Classified Transmission HUD Bar */}
+      <div className="mb-4 flex max-w-[850px] items-center justify-between">
+        <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] text-accent uppercase">
+          <span
+            className={cn(
+              "size-2 rounded-full",
+              isComplete
+                ? "bg-emerald-400 shadow-[0_0_8px_rgb(52,211,153)]"
+                : "animate-ping bg-accent shadow-[0_0_8px_var(--accent)]",
+            )}
+          />
+          <span>
+            {isComplete ? "INTEL TRANSMISSION CONFIRMED // READY" : "DECRYPTING CASE DOSSIER..."}
+          </span>
+        </div>
+        {!isComplete && (
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="group flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] tracking-widest text-[#9aa3bd] uppercase transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
+          >
+            <span>[ SKIP</span>
+            <span className="text-accent transition-transform group-hover:translate-x-0.5">
+              ❯❯ ]
+            </span>
+          </button>
+        )}
+      </div>
+
       <header className="font-display text-[28px] leading-[1.62] font-black uppercase lg:text-[40px]">
-        <p className="text-accent">{caseBrief.number}</p>
-        <h1>{caseBrief.title}</h1>
+        <p className="min-h-[1.62em] text-accent">
+          {isComplete ? (
+            caseBrief.number
+          ) : (
+            <>
+              {caseBrief.number.slice(0, numberChars)}
+              {numberChars < caseBrief.number.length && <Cursor />}
+            </>
+          )}
+        </p>
+        <h1 className="min-h-[1.62em]">
+          {isComplete ? (
+            caseBrief.title
+          ) : (
+            <>
+              {caseBrief.title.slice(0, titleChars)}
+              {numberChars >= caseBrief.number.length && titleChars < caseBrief.title.length && (
+                <Cursor />
+              )}
+            </>
+          )}
+        </h1>
       </header>
 
       <div className="mt-10 flex flex-col gap-12 lg:mt-[56.4px] lg:flex-row lg:gap-[185px]">
         <section aria-labelledby="case-brief" className="lg:w-[490px]">
-          <SectionHeading id="case-brief" underline={127.5}>
+          <SectionHeading
+            id="case-brief"
+            underline={127.5}
+            active={isComplete || briefHeadingVisible}
+          >
             Case brief
           </SectionHeading>
-          <div className="mt-5 font-roboto text-[17px] leading-[2.03] lg:text-[20px]">
-            {caseBrief.brief.map((paragraph, i) => (
-              <p key={i}>{renderHighlights(paragraph)}</p>
-            ))}
+          <div className="mt-5 min-h-[300px] font-roboto text-[17px] leading-[2.03] lg:text-[20px]">
+            {caseBrief.brief.map((paragraph, i) => {
+              if (isComplete) {
+                return <p key={i}>{renderHighlights(paragraph)}</p>;
+              }
+
+              const isFinished = i < briefParaIndex;
+              const isCurrent = i === briefParaIndex && (briefHeadingVisible || isComplete);
+              const pData = parsedBrief[i]!;
+
+              if (!isFinished && !isCurrent) {
+                return null;
+              }
+
+              return (
+                <p key={i}>
+                  {isFinished
+                    ? renderTypedTokens(pData.tokens, pData.totalLength, false)
+                    : renderTypedTokens(pData.tokens, briefCharIndex, true)}
+                </p>
+              );
+            })}
           </div>
+
           <Link
             href={proceedHref}
-            className="mt-[45px] flex h-[71px] w-full max-w-[383px] items-center justify-center gap-2.5 rounded-[32px] bg-accent p-2.5 font-display text-[20px] leading-[1.62] font-black text-[#020512] uppercase transition-[filter] hover:brightness-110"
+            className={cn(
+              "mt-[45px] flex h-[71px] w-full max-w-[383px] items-center justify-center gap-2.5 rounded-[32px] bg-accent p-2.5 font-display text-[20px] leading-[1.62] font-black text-[#020512] uppercase transition-all duration-700 hover:brightness-110",
+              isComplete
+                ? "translate-y-0 opacity-100 shadow-[0_0_35px_rgba(252,163,17,0.35)]"
+                : "pointer-events-none translate-y-4 opacity-0",
+            )}
           >
             Proceed
             <Image
@@ -90,21 +387,48 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
         </section>
 
         <section aria-labelledby="case-objectives" className="lg:w-[401px]">
-          <SectionHeading id="case-objectives" underline={226}>
+          <SectionHeading
+            id="case-objectives"
+            underline={226}
+            active={isComplete || objectivesHeadingVisible}
+          >
             Case objectives
           </SectionHeading>
           <ol className="mt-5 font-roboto">
-            {caseBrief.objectives.map((objective, i) => (
-              <li key={i} className="flex h-[40.56px] items-center gap-[11px] text-[12px]">
-                <span
-                  aria-hidden
-                  className="grid size-[17px] shrink-0 place-items-center rounded-full bg-accent font-display text-[10px] font-bold text-black"
+            {caseBrief.objectives.map((objective, i) => {
+              const isVisible = isComplete || (objectivesHeadingVisible && i <= objIndex);
+              const isCurrent = !isComplete && objectivesHeadingVisible && i === objIndex;
+              const isFinished = isComplete || i < objIndex;
+
+              return (
+                <li
+                  key={i}
+                  className={cn(
+                    "flex h-[40.56px] items-center gap-[11px] text-[12px] transition-opacity duration-200",
+                    isVisible ? "opacity-100" : "pointer-events-none opacity-0",
+                  )}
                 >
-                  {i + 1}
-                </span>
-                {objective}
-              </li>
-            ))}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "grid size-[17px] shrink-0 place-items-center rounded-full bg-accent font-display text-[10px] font-bold text-black shadow-[0_0_6px_var(--accent)] transition-all duration-300",
+                      isVisible ? "scale-100 opacity-100" : "scale-50 opacity-0",
+                    )}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="truncate sm:overflow-visible sm:whitespace-normal">
+                    {isFinished ? objective : isCurrent ? objective.slice(0, objCharIndex) : ""}
+                    {isCurrent && (
+                      <span
+                        aria-hidden="true"
+                        className="ml-1 inline-block h-[1.1em] w-1.5 animate-pulse bg-accent align-middle shadow-[0_0_6px_var(--accent)]"
+                      />
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ol>
         </section>
       </div>

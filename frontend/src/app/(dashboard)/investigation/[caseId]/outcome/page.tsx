@@ -5,14 +5,10 @@ import { Suspense } from "react";
 
 import { TraceLoader } from "@/components/feedback/trace-loader";
 import { CaseSolved } from "@/features/investigation/components/case-solved";
-import { getCaseOutcome, outcomeCaseIds } from "@/features/investigation/outcome";
+import { getCaseOutcome } from "@/features/investigation/outcome";
 import { getSelectedInvestigator } from "@/features/investigators/selection";
 
 type Props = PageProps<"/investigation/[caseId]/outcome">;
-
-export function generateStaticParams() {
-  return outcomeCaseIds.map((caseId) => ({ caseId }));
-}
 
 export const metadata: Metadata = {
   title: "Case solved",

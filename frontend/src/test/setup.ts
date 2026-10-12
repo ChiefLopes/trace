@@ -1,7 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
+
+// Next.js server-only package throws in jsdom environment; mock it for tests.
+vi.mock("server-only", () => ({}));
 
 // jsdom has no <dialog> modal API yet; emulate just the open/close state.
 if (typeof HTMLDialogElement !== "undefined" && !HTMLDialogElement.prototype.showModal) {

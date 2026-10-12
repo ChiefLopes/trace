@@ -20,7 +20,7 @@ const label = "font-display text-[11.3px] leading-[16.15px] font-black tracking-
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-[9.69px]">
+    <section aria-labelledby={id} className="flex flex-col gap-2.5">
       <h2 id={id} className={cn(label, "text-accent")}>
         {title}
       </h2>
@@ -31,14 +31,12 @@ function Section({ id, title, children }: { id: string; title: string; children:
 
 function InfoCard({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-[3.23px] rounded-[9.69px] border-[0.8px] border-white/8 bg-[rgb(4_18_58/0.55)] p-[16.95px]">
-      <dt className="flex items-center gap-[6.46px] pb-[6.46px] font-roboto text-[9.69px] leading-[12.92px] font-semibold tracking-[0.48px] text-[rgb(203_213_225/0.7)] uppercase italic">
-        <Image src={icon} alt="" width={13} height={13} className="size-[12.92px]" />
+    <div className="flex min-w-0 flex-1 flex-col gap-1 rounded-[10px] border border-white/8 bg-[rgb(4_18_58/0.55)] p-4 transition-colors hover:border-white/15 hover:bg-[rgb(5_22_70/0.65)]">
+      <dt className="flex items-center gap-2 pb-1 font-roboto text-[10px] font-semibold tracking-wider text-[rgb(203_213_225/0.7)] uppercase italic">
+        <Image src={icon} alt="" width={14} height={14} className="size-3.5" />
         {label}
       </dt>
-      <dd className="font-display text-[16.15px] leading-[22.6px] font-bold tracking-[0.4px]">
-        {value}
-      </dd>
+      <dd className="font-display text-[16px] font-bold tracking-tight text-white">{value}</dd>
     </div>
   );
 }
@@ -57,7 +55,7 @@ export function CaseFile({ caseFile, beginHref, className }: CaseFileProps) {
     <article
       aria-labelledby="case-file-title"
       className={cn(
-        "relative isolate flex flex-col items-center overflow-hidden rounded-[19.38px] border-[0.8px] border-[rgb(252_163_17/0.18)] p-[0.8px] pb-6 backdrop-blur-[8px] lg:h-[965px] lg:w-[775px] lg:pb-[0.8px]",
+        "relative isolate flex flex-col items-center rounded-[19.38px] border-[0.8px] border-[rgb(252_163_17/0.18)] p-[0.8px] pb-8 backdrop-blur-[8px] lg:min-h-[965px] lg:w-[775px] lg:pb-10",
         "bg-[radial-gradient(930px_1158px_at_50%_0,rgb(5_31_104/0.45),rgb(4_20_66/0.65)_50%,rgb(2_8_28/0.85))]",
         "shadow-[0_20.18px_40.37px_-9.69px_rgb(0_0_0/0.25)]",
         className,
@@ -65,14 +63,14 @@ export function CaseFile({ caseFile, beginHref, className }: CaseFileProps) {
     >
       <div
         aria-hidden
-        className="absolute top-[-103.33px] left-[-103.33px] -z-10 size-[258.34px] rounded-full bg-[#051f68] opacity-60 blur-[40.37px]"
+        className="pointer-events-none absolute top-[-103.33px] left-[-103.33px] -z-10 size-[258.34px] rounded-full bg-[#051f68] opacity-60 blur-[40.37px]"
       />
       <div
         aria-hidden
-        className="absolute top-[calc(50%+115.88px)] right-[-103.35px] -z-10 size-[232.5px] -translate-y-1/2 rounded-full bg-accent opacity-10 blur-[56.51px]"
+        className="pointer-events-none absolute top-[calc(50%+115.88px)] right-[-103.35px] -z-10 size-[232.5px] -translate-y-1/2 rounded-full bg-accent opacity-10 blur-[56.51px]"
       />
 
-      <header className="flex w-full flex-col gap-[9.69px] border-b-[0.8px] border-white/10 px-5 pt-8 pb-6 lg:h-[180px] lg:px-[32.29px] lg:pt-[50.05px] lg:pb-[33.1px]">
+      <header className="flex w-full flex-col gap-2.5 border-b-[0.8px] border-white/10 px-5 pt-8 pb-6 lg:px-[32.29px] lg:pt-[50.05px] lg:pb-[33.1px]">
         <p className={cn(label, "text-accent")}>{number}</p>
         <h1
           id="case-file-title"
@@ -80,20 +78,23 @@ export function CaseFile({ caseFile, beginHref, className }: CaseFileProps) {
         >
           {codename}
         </h1>
-        <p className="flex items-center gap-[6.46px] pt-[3.23px] text-[12.92px] leading-[19.38px] text-[rgb(203_213_225/0.7)]">
+        <p className="flex items-center gap-2 pt-1 text-[13px] leading-[19.38px] text-[rgb(203_213_225/0.7)]">
           Difficulty: <span className="font-bold text-white">{difficulty}</span>
-          <span aria-hidden className="px-[4.84px] text-[rgb(203_213_225/0.4)]">
+          <span aria-hidden className="px-1 text-[rgb(203_213_225/0.4)]">
             •
           </span>
           Status: <span className="font-bold text-accent">{STATUS_LABEL[status]}</span>
         </p>
       </header>
 
-      <div className="flex w-full flex-col gap-[29.06px] p-5 lg:h-[702px] lg:p-[32.29px]">
+      <div className="flex w-full flex-col gap-7 p-5 lg:p-[32.29px]">
         <Section id="case-file-briefing" title="Briefing">
-          <div className="flex flex-col gap-[12.92px] font-roboto text-[12.92px] leading-[22.6px]">
+          <div className="flex flex-col gap-3 font-roboto text-[13px] leading-[1.75]">
             {briefing.map((paragraph, i) => (
-              <p key={i} className={i === briefing.length - 1 ? "text-[#cbd5e1]" : "text-white"}>
+              <p
+                key={i}
+                className={i === briefing.length - 1 ? "font-medium text-slate-300" : "text-white"}
+              >
                 {renderHighlights(paragraph)}
               </p>
             ))}
@@ -101,7 +102,7 @@ export function CaseFile({ caseFile, beginHref, className }: CaseFileProps) {
         </Section>
 
         <Section id="case-file-known" title="Known information">
-          <dl className="flex flex-col gap-[12.92px] sm:flex-row">
+          <dl className="flex flex-col gap-3 sm:flex-row">
             <InfoCard
               icon="/icons/case-file/wallet.svg"
               label="Initial wallet"
@@ -121,38 +122,40 @@ export function CaseFile({ caseFile, beginHref, className }: CaseFileProps) {
         </Section>
 
         <Section id="case-file-objectives" title="Your objectives">
-          <ol className="flex flex-col gap-[9.69px]">
+          <ol className="flex flex-col gap-2.5">
             {objectives.map((objective, i) => (
               <li
                 key={i}
-                className="flex items-center gap-[12.92px] rounded-[9.69px] border-[0.8px] border-white/7 bg-[rgb(4_18_58/0.45)] px-[16.95px] py-[13.72px] font-roboto text-[14.53px] leading-[22.6px] tracking-[-0.36px]"
+                className="group/item flex items-center gap-3.5 rounded-[10px] border border-white/8 bg-[rgb(4_18_58/0.45)] px-4 py-3.5 font-roboto text-[14px] leading-relaxed text-slate-200 transition-all duration-200 hover:translate-x-1 hover:border-accent/35 hover:bg-[rgb(6_24_78/0.6)]"
               >
                 <span
                   aria-hidden
-                  className="grid size-[25.83px] shrink-0 place-items-center rounded-full border-[0.8px] border-accent/40 bg-accent/15 font-display text-[11.3px] leading-[16.15px] font-bold text-accent shadow-[0_0_8.07px_rgb(252_163_17/0.15)]"
+                  className="grid size-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/15 font-display text-[12px] font-bold text-accent shadow-[0_0_8px_rgba(252,163,17,0.2)] transition-colors group-hover/item:border-accent group-hover/item:bg-accent/25"
                 >
                   {i + 1}
                 </span>
-                {objective}
+                <span className="flex-1 tracking-[-0.2px]">{objective}</span>
               </li>
             ))}
           </ol>
         </Section>
       </div>
 
-      <Link
-        href={beginHref}
-        className="flex h-[57.32px] w-[calc(100%-40px)] max-w-[569.96px] shrink-0 items-center justify-center gap-[8.07px] rounded-[25.83px] bg-accent p-[8.07px] font-display text-[16.15px] leading-[1.62] font-black text-[#020512] uppercase transition-[filter] hover:brightness-110"
-      >
-        Begin investigation
-        <Image
-          src="/icons/arrow-line.svg"
-          alt=""
-          width={20}
-          height={20}
-          className="size-[19.38px] -scale-y-100 -rotate-90"
-        />
-      </Link>
+      <div className="flex w-full justify-center px-5 pt-4 pb-2 lg:px-[32.29px] lg:pt-6">
+        <Link
+          href={beginHref}
+          className="group flex h-[58px] w-full max-w-[570px] shrink-0 items-center justify-center gap-3 rounded-full bg-linear-to-r from-[#fca311] via-[#ffb433] to-[#fca311] px-6 font-display text-[16px] font-black tracking-wider text-[#020512] uppercase shadow-[0_4px_20px_rgba(252,163,17,0.35)] transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_8px_28px_rgba(252,163,17,0.55)] hover:brightness-110 active:scale-[0.99]"
+        >
+          <span>Begin investigation</span>
+          <Image
+            src="/icons/arrow-line.svg"
+            alt=""
+            width={20}
+            height={20}
+            className="size-5 -scale-y-100 -rotate-90 transition-transform duration-200 group-hover:translate-x-1.5"
+          />
+        </Link>
+      </div>
     </article>
   );
 }

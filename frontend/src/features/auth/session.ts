@@ -6,9 +6,17 @@ import { connection } from "next/server";
 import { cache } from "react";
 import { z } from "zod";
 
-import { findUser } from "./demo-account";
+import { ApiError } from "@/lib/api/errors";
+import { serverApi } from "@/lib/api/server";
+import { currentUserResponseSchema } from "@/features/api/schemas";
+
 import { LOGIN_PAGE } from "./routes";
-import { SESSION_COOKIE, signSession, verifySessionToken } from "./session-token";
+import {
+  BACKEND_AUTH_COOKIE,
+  SESSION_COOKIE,
+  signSession,
+  verifySessionToken,
+} from "./session-token";
 
 export const currentUserSchema = z.object({
   id: z.string(),
@@ -18,27 +26,35 @@ export const currentUserSchema = z.object({
 
 export type CurrentUser = z.infer<typeof currentUserSchema>;
 
-const HOUR = 60 * 60;
-/** "Remember me" keeps the player signed in for 30 days; otherwise 12 hours, browser session only. */
-const REMEMBER_SECONDS = 30 * 24 * HOUR;
-const SESSION_SECONDS = 12 * HOUR;
-
-export async function createSession(userId: string, remember: boolean) {
-  const lifetime = remember ? REMEMBER_SECONDS : SESSION_SECONDS;
+export async function createSession(
+  userId: string,
+  backendToken: string,
+  expiresIn: number,
+  remember: boolean,
+) {
+  if (!backendToken || !Number.isInteger(expiresIn) || expiresIn <= 0) {
+    throw new Error("The backend returned an invalid session.");
+  }
+  const lifetime = expiresIn;
   const token = await signSession({ sub: userId, exp: Math.floor(Date.now() / 1000) + lifetime });
 
-  (await cookies()).set(SESSION_COOKIE, token, {
+  const cookieStore = await cookies();
+  const options = {
     httpOnly: true, // not readable from JavaScript, so XSS can't steal it
     secure: process.env.NODE_ENV === "production", // HTTPS only in production
     sameSite: "lax", // not sent on cross-site POSTs (CSRF)
     path: "/",
-    // Without maxAge it's a session cookie that ends with the browser.
     ...(remember && { maxAge: lifetime }),
-  });
+  } as const;
+
+  cookieStore.set(SESSION_COOKIE, token, options);
+  cookieStore.set(BACKEND_AUTH_COOKIE, backendToken, options);
 }
 
 export async function deleteSession() {
-  (await cookies()).delete(SESSION_COOKIE);
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE);
+  cookieStore.delete(BACKEND_AUTH_COOKIE);
 }
 
 /**
@@ -56,13 +72,19 @@ export const verifySession = cache(async () => {
 });
 
 /**
- * The signed-in player. MOCK: resolves the demo account until the backend has
- * a `/me` endpoint; then call `serverApi.get("/me", currentUserSchema)`
- * forwarding the session cookie.
+ * The signed-in player. The backend validates the access token and supplies
+ * the account profile; the local signed marker is only a fast page gate.
  */
 export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   const session = await verifySession();
-  const user = findUser(session.sub);
-  if (!user) redirect(LOGIN_PAGE);
-  return user;
+  try {
+    const user = await serverApi.get("/api/me", currentUserResponseSchema);
+    if (user.id !== session.sub) redirect(`${LOGIN_PAGE}?session=expired`);
+    return user;
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      redirect(`${LOGIN_PAGE}?session=expired`);
+    }
+    throw error;
+  }
 });

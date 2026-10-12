@@ -84,7 +84,7 @@ type TransactionDetailProps = {
   walletHref: (walletId: string) => Route;
   /** "Trace the Funds": follow the money to the receiving wallet. */
   traceHref: Route;
-  evidenceHref: Route;
+  caseId: string;
 };
 
 export function TransactionDetail({
@@ -93,7 +93,7 @@ export function TransactionDetail({
   to,
   walletHref,
   traceHref,
-  evidenceHref,
+  caseId,
 }: TransactionDetailProps) {
   const amount = formatSol(transaction.amountLamports);
 
@@ -171,7 +171,12 @@ export function TransactionDetail({
       </section>
 
       <div className="mt-[34px] flex flex-wrap gap-2.5">
-        <AddToEvidenceLink href={evidenceHref} />
+        <AddToEvidenceLink
+          caseId={caseId}
+          kind="transaction"
+          targetId={transaction.id}
+          label={transaction.signature}
+        />
         <Link
           href={traceHref}
           className="flex h-9 items-center gap-2 rounded-lg border border-accent/70 bg-[#0d1640] px-4 text-xs font-semibold text-accent transition-colors hover:border-accent"

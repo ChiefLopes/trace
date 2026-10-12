@@ -7,6 +7,7 @@ import { Suspense } from "react";
 
 import { TraceLoader } from "@/components/feedback/trace-loader";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils/cn";
 import { getCurrentUser } from "@/features/auth/session";
 import { caseIds } from "@/features/cases/data";
 import { caseRoutes } from "@/features/cases/routes";
@@ -34,11 +35,26 @@ export const metadata: Metadata = {
  * Head-and-shoulders of the investigator above the left column (Figma:
  * 166.68×243.36, mirrored; placed relative to <main>). Offsets fit the full-length art;
  * half-body art falls back to a top-aligned fit.
+ *
+ * Faces RIGHT (opposite of spotlight). Uses inverse flip logic.
  */
+const WORKSPACE_FLIP: Record<string, boolean> = {
+  "officer-1": false,
+  "officer-2": true,
+  "officer-3": false,
+  "officer-4": false,
+};
+
 function WorkspacePortrait({ investigator }: { investigator: Investigator }) {
   const art = investigator.fullBody;
+  const shouldFlip = WORKSPACE_FLIP[investigator.id] ?? true;
   return (
-    <div className="pointer-events-none absolute! top-[-48px] left-[14.87px] hidden h-[243.36px] w-[166.68px] -scale-x-100 overflow-hidden select-none lg:block">
+    <div
+      className={cn(
+        "pointer-events-none absolute! top-[-48px] left-[14.87px] hidden h-[243.36px] w-[166.68px] overflow-hidden select-none lg:block",
+        shouldFlip && "-scale-x-100",
+      )}
+    >
       {art ? (
         <Image
           src={art.src}
@@ -47,7 +63,7 @@ function WorkspacePortrait({ investigator }: { investigator: Investigator }) {
           height={art.height}
           sizes="211px"
           loading="eager"
-          className="absolute top-[-10.7px] left-[-39.7px] h-auto w-[210.5px] max-w-none"
+          className="absolute top-[-10.7px] left-1/2 h-[502px] w-auto max-w-none -translate-x-1/2 object-contain object-top"
         />
       ) : (
         <Image
@@ -63,15 +79,13 @@ function WorkspacePortrait({ investigator }: { investigator: Investigator }) {
   );
 }
 
-async function WorkspaceContent({ params, searchParams }: Props) {
-  const [{ caseId }, query, investigator, user] = await Promise.all([
+async function WorkspaceContent({ params }: Props) {
+  const [{ caseId }, investigator, user] = await Promise.all([
     params,
-    searchParams,
     getSelectedInvestigator(),
     getCurrentUser(),
   ]);
-  // MOCK: `?preview=solved` shows the finished-case state until the backend tracks progress.
-  const workspace = await getWorkspace(caseId, query.preview === "solved" ? "solved" : undefined);
+  const workspace = await getWorkspace(caseId);
   if (!workspace) notFound();
 
   const solved = isSolved(workspace);

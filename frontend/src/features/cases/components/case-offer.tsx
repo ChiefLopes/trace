@@ -31,7 +31,7 @@ export function CaseOffer({ agentName, caseTitle, rejectHref, acceptHref }: Case
         </Link>
         <Link href={acceptHref} className={`${action} bg-accent sm:w-[335px]`}>
           <Image src="/icons/play.svg" alt="" width={24} height={24} className="size-6" />
-          Accept and play
+          Open case file
         </Link>
       </div>
     </section>

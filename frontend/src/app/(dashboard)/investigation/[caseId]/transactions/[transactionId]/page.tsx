@@ -77,7 +77,7 @@ async function TransactionContent({ params }: Pick<Props, "params">) {
           to={to}
           walletHref={(id) => caseRoutes.wallet(caseId, id)}
           traceHref={caseRoutes.wallet(caseId, to.id)}
-          evidenceHref={caseRoutes.evidence(caseId)}
+          caseId={caseId}
         />
       </div>
 

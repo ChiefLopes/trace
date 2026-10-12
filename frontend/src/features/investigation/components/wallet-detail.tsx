@@ -124,7 +124,7 @@ function ActivityRow({ entry, href }: { entry: WalletActivity; href: Route }) {
           </p>
         </div>
         <span className="flex items-center gap-1.5 font-mono text-[8.5px] font-semibold uppercase">
-          {entry.link.kind === "transaction" ? "Tx" : "Wallet"}
+          Tx
           <ArrowRight className="size-3.5" />
         </span>
       </Link>
@@ -139,7 +139,7 @@ type WalletDetailProps = {
   receivedFrom: Neighbor;
   sentTo: Neighbor;
   targetHref: (target: Target) => Route;
-  evidenceHref: Route;
+  caseId: string;
 };
 
 export function WalletDetail({
@@ -147,7 +147,7 @@ export function WalletDetail({
   receivedFrom,
   sentTo,
   targetHref,
-  evidenceHref,
+  caseId,
 }: WalletDetailProps) {
   return (
     <article
@@ -169,7 +169,13 @@ export function WalletDetail({
           </p>
           <p className="mt-2.5 text-xs text-foreground/85">{wallet.description}</p>
         </div>
-        <AddToEvidenceLink href={evidenceHref} className="h-[33px] text-[11px]" />
+        <AddToEvidenceLink
+          caseId={caseId}
+          kind="wallet"
+          targetId={wallet.id}
+          label={wallet.label}
+          className="h-[33px] text-[11px]"
+        />
       </header>
 
       <section aria-labelledby="wallet-overview" className="mt-[30px]">
@@ -229,11 +235,28 @@ export function WalletDetail({
       <section aria-labelledby="wallet-activity" className="mt-[30px]">
         <SectionLabel id="wallet-activity">Activity</SectionLabel>
         <ol className="mt-3 flex flex-col gap-[11px]">
-          {wallet.activity.map((entry) => (
-            <ActivityRow key={entry.id} entry={entry} href={targetHref(entry.link)} />
-          ))}
+          {wallet.activity.map((entry) => {
+            const txId =
+              entry.link.kind === "transaction" && entry.link.id ? entry.link.id : entry.id;
+            return (
+              <ActivityRow
+                key={entry.id}
+                entry={entry}
+                href={targetHref({ kind: "transaction", id: txId })}
+              />
+            );
+          })}
         </ol>
       </section>
+
+      <div className="mt-8 flex flex-wrap gap-2.5">
+        <AddToEvidenceLink
+          caseId={caseId}
+          kind="wallet"
+          targetId={wallet.id}
+          label={wallet.label}
+        />
+      </div>
     </article>
   );
 }

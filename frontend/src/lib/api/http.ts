@@ -10,6 +10,8 @@ export type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
 };
 
+type DefaultHeaders = () => HeadersInit | Promise<HeadersInit>;
+
 function buildUrl(baseUrl: string, path: string, query?: Query) {
   const url = `${baseUrl.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
   if (!query) return url;
@@ -38,7 +40,7 @@ async function readBody(res: Response): Promise<unknown> {
  * against a Zod schema, so a backend contract change fails loudly at the
  * boundary instead of as an `undefined` deep inside a component.
  */
-export function createHttpClient(baseUrl: string) {
+export function createHttpClient(baseUrl: string, getDefaultHeaders?: DefaultHeaders) {
   async function request<S extends z.ZodType>(
     path: string,
     schema: S,
@@ -47,6 +49,7 @@ export function createHttpClient(baseUrl: string) {
     const res = await fetch(buildUrl(baseUrl, path, query), {
       ...init,
       headers: {
+        ...(await getDefaultHeaders?.()),
         Accept: "application/json",
         ...(body !== undefined && { "Content-Type": "application/json" }),
         ...headers,

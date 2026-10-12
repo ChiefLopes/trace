@@ -1,22 +1,26 @@
-import { Plus } from "lucide-react";
-import type { Route } from "next";
-import Link from "next/link";
+import { AddEvidenceButton } from "@/features/evidence/components/add-evidence-button";
 
-import { cn } from "@/lib/utils/cn";
-
-/** Opens the evidence page for the case (styled as the amber "Add to Evidence" button). */
-export function AddToEvidenceLink({ href, className }: { href: Route; className?: string }) {
+/** Adds the selected case entity to the backend evidence collection. */
+export function AddToEvidenceLink({
+  caseId,
+  kind,
+  targetId,
+  label,
+  className,
+}: {
+  caseId: string;
+  kind: "wallet" | "transaction";
+  targetId: string;
+  label: string;
+  className?: string;
+}) {
   return (
-    <Link
-      href={href}
-      className={cn(
-        "flex h-9 items-center gap-2 rounded-lg bg-accent px-4 text-xs font-semibold text-accent-foreground",
-        "shadow-[0_6px_18px_-6px_var(--accent)] transition-[filter] hover:brightness-110",
-        className,
-      )}
-    >
-      <Plus className="size-4" strokeWidth={2.5} />
-      Add to Evidence
-    </Link>
+    <AddEvidenceButton
+      caseId={caseId}
+      kind={kind}
+      targetId={targetId}
+      label={label}
+      className={className}
+    />
   );
 }

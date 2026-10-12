@@ -4,12 +4,13 @@ import type { Route } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { ApiError } from "@/lib/api/errors";
 import { setFlash } from "@/features/flash/server";
 
-import { verifyDemoCredentials } from "./demo-account";
+import { login as loginApi, signup as signupApi, logout as logoutApi } from "./server-api";
 import { clearFailures, recordFailure, retryAfterMinutes } from "./rate-limit";
-import { LOGIN_PAGE, safeRedirectPath } from "./routes";
-import { loginSchema } from "./schemas";
+import { AFTER_LOGIN, LOGIN_PAGE, safeRedirectPath } from "./routes";
+import { loginSchema, signupSchema } from "./schemas";
 import { createSession, deleteSession } from "./session";
 import { SessionConfigError } from "./session-token";
 
@@ -23,9 +24,9 @@ async function clientIp() {
 }
 
 /**
- * Sign in. Server Actions are public endpoints, so everything is re-checked
- * here: input shape, throttling, credentials. Next.js also rejects
- * cross-origin calls to Server Actions (Origin vs Host), which covers CSRF.
+ * Sign in through the backend. Server Actions are public endpoints, so inputs
+ * and throttling are re-checked here. Next.js checks Origin against Host to
+ * reject cross-origin Server Action calls.
  * On success it returns the destination rather than calling redirect(): the
  * form calls this directly, and a redirect thrown from an awaited action would
  * land in the form's error handling.
@@ -41,28 +42,59 @@ export async function loginAction(values: unknown, next?: unknown): Promise<Logi
     return { error: `Too many attempts. Try again in ${wait} minute${wait === 1 ? "" : "s"}.` };
   }
 
-  const user = verifyDemoCredentials(email, password);
-  if (!user) {
-    recordFailure(throttleKey);
-    // Same message for unknown email and wrong password: don't confirm which accounts exist.
-    return { error: "Incorrect email or password." };
-  }
-
+  let displayName = email.split("@")[0] ?? email;
   try {
-    await createSession(user.id, remember);
+    const auth = await loginApi({ email, password });
+    await createSession(auth.user.id, auth.token, auth.expiresIn, remember);
+    displayName = auth.user.username;
   } catch (error) {
     if (error instanceof SessionConfigError) {
       console.error(`[auth] ${error.message}`);
       return { error: "Sign-in isn't configured on this server yet." };
     }
+    if (
+      error instanceof ApiError &&
+      (error.status === 400 || error.status === 401 || error.status === 403)
+    ) {
+      recordFailure(throttleKey);
+      return { error: "Incorrect email or password." };
+    }
     throw error;
   }
   clearFailures(throttleKey);
 
-  return { redirectTo: safeRedirectPath(next), displayName: user.displayName };
+  return { redirectTo: safeRedirectPath(next), displayName };
+}
+
+/** Create the account and establish the same backend-backed session as login. */
+export async function signupAction(values: unknown): Promise<LoginResult> {
+  const parsed = signupSchema.safeParse(values);
+  if (!parsed.success) return { error: "Enter valid account details and check your password." };
+
+  try {
+    const auth = await signupApi({
+      username: parsed.data.username,
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+    await createSession(auth.user.id, auth.token, auth.expiresIn, false);
+    return { redirectTo: AFTER_LOGIN, displayName: auth.user.username };
+  } catch (error) {
+    if (error instanceof SessionConfigError) {
+      console.error(`[auth] ${error.message}`);
+      return { error: "Sign-up isn't configured on this server yet." };
+    }
+    if (error instanceof ApiError) return { error: error.message };
+    throw error;
+  }
 }
 
 export async function logoutAction() {
+  try {
+    await logoutApi();
+  } catch {
+    // Local logout must still work if the backend is unavailable.
+  }
   await deleteSession();
   await setFlash("signed-out");
   redirect(LOGIN_PAGE);

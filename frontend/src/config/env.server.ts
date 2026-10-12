@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  API_BASE_URL: z.url().default("http://localhost:8080"),
+  API_BASE_URL: z.url().default("https://trace-backend.fastapicloud.dev"),
 });
 
 const parsed = serverEnvSchema.safeParse(process.env);

@@ -18,6 +18,7 @@ export const investigators: Investigator[] = [
     description: "Blond investigator in a black field jacket",
     image: { src: "/investigators/officer1.png", width: 777, height: 941 },
     pickerHeight: 212.6,
+    fullBody: { src: "/investigators/gray2_full.png", width: 1268, height: 3072 },
   },
   {
     id: "officer-2",
@@ -31,12 +32,14 @@ export const investigators: Investigator[] = [
     description: "Grey-haired veteran investigator with glasses",
     image: { src: "/investigators/officer3.png", width: 567, height: 883 },
     pickerHeight: 228.8,
+    fullBody: { src: "/investigators/gray_full.png", width: 1080, height: 3072 },
   },
   {
     id: "officer-4",
     description: "Auburn-haired investigator holding a tablet",
     image: { src: "/investigators/officer4.png", width: 638, height: 987 },
     pickerHeight: 243.8,
+    fullBody: { src: "/investigators/lady2_full.png", width: 1096, height: 2920 },
   },
 ];
 

@@ -5,13 +5,14 @@ import { z } from "zod";
 import {
   evidenceSubmissionSchema,
   getEvidencePrompt,
+  submitCaseTheory,
   type EvidenceFormState,
 } from "@/features/evidence/data";
 
 /**
  * Receives the player's conclusion. Form data is untrusted: it is validated
  * against the case's own options before anything else happens.
- * TODO: forward to the backend, which scores it (the answer never leaves the server).
+ * Forwards to the backend, which scores it.
  */
 export async function submitEvidence(
   caseId: string,
@@ -41,9 +42,21 @@ export async function submitEvidence(
     };
   }
 
-  return {
-    status: "received",
-    message:
-      "Evidence received. Scoring isn't connected yet: the backend will check your conclusion.",
-  };
+  try {
+    const outcome = await submitCaseTheory(caseId, parsed.data);
+    return {
+      status: "received",
+      message: `Case solved! Score: ${outcome.score}/${outcome.maxScore}`,
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) throw error;
+    if (error instanceof Error && error.name === "ApiError") {
+      return {
+        status: "invalid",
+        values,
+        fieldErrors: { theory: error.message },
+      };
+    }
+    throw error;
+  }
 }

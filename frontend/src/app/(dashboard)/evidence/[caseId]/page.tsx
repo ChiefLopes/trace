@@ -8,6 +8,8 @@ import { TraceLoader } from "@/components/feedback/trace-loader";
 import { caseRoutes } from "@/features/cases/routes";
 import { EvidenceForm } from "@/features/evidence/components/evidence-form";
 import { evidenceCaseIds, getEvidencePrompt } from "@/features/evidence/data";
+import { listEvidence } from "@/features/evidence/server-api";
+import { RemoveEvidenceButton } from "@/features/evidence/components/remove-evidence-button";
 import { getWorkspace } from "@/features/investigation/data";
 import { InvestigatorPortrait } from "@/features/investigators/components/investigator-portrait";
 import { getSelectedInvestigator } from "@/features/investigators/selection";
@@ -26,7 +28,11 @@ export const metadata: Metadata = {
 
 async function EvidenceContent({ params }: Pick<Props, "params">) {
   const { caseId } = await params;
-  const [prompt, workspace] = await Promise.all([getEvidencePrompt(caseId), getWorkspace(caseId)]);
+  const [prompt, workspace, evidence] = await Promise.all([
+    getEvidencePrompt(caseId),
+    getWorkspace(caseId),
+    listEvidence(caseId),
+  ]);
   if (!prompt || !workspace) notFound();
 
   // Wallet choices are labelled from the case trail (single source of names/addresses).
@@ -52,6 +58,45 @@ async function EvidenceContent({ params }: Pick<Props, "params">) {
       </h1>
 
       <section
+        aria-labelledby="evidence-collection"
+        className="mt-5 rounded-[14px] border border-white/10 bg-[#050a24]/90 p-5"
+      >
+        <h2
+          id="evidence-collection"
+          className="font-display text-sm font-black tracking-wide uppercase"
+        >
+          Pinned evidence ({evidence.length})
+        </h2>
+        {evidence.length === 0 ? (
+          <p className="mt-2 text-xs text-[#8f98b3]">
+            Wallets and transactions you add will be saved here.
+          </p>
+        ) : (
+          <ul className="mt-3 divide-y divide-white/10">
+            {evidence.map((item) => (
+              <li
+                key={`${item.kind}:${item.targetId}`}
+                className="flex items-start justify-between gap-4 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{item.label}</p>
+                  <p className="mt-0.5 font-mono text-[10px] text-[#8f98b3]">
+                    {item.kind} · {item.targetId}
+                  </p>
+                  {item.notes && (
+                    <p className="mt-2 rounded border border-white/5 bg-[#03061a] p-2.5 text-xs leading-relaxed text-[#c9d4ee] italic">
+                      &ldquo;{item.notes}&rdquo;
+                    </p>
+                  )}
+                </div>
+                <RemoveEvidenceButton caseId={caseId} evidenceId={item.id ?? item.targetId} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section
         aria-labelledby="evidence-question"
         className="mt-[22px] rounded-[14px] border border-white/10 bg-linear-to-br from-[#050a24]/95 via-[#061247]/95 to-[#0a1d63]/95 px-5 pt-[33px] pb-[33px] shadow-[0_30px_80px_-30px_rgb(0_0_0/0.8)] sm:px-[37px]"
       >
@@ -75,6 +120,7 @@ async function EvidenceContent({ params }: Pick<Props, "params">) {
             destinations={destinations}
             scenarios={prompt.scenarios.map((s) => ({ value: s.id, label: s.label }))}
             theoryPlaceholder={prompt.theoryPlaceholder}
+            caseId={caseId}
           />
         </div>
       </section>

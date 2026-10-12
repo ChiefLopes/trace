@@ -1,23 +1,16 @@
-import { z } from "zod";
+import "server-only";
 
-export const dashboardSummarySchema = z.object({
-  activeCase: z.object({ id: z.string(), label: z.string() }).nullable(),
-  objectives: z.object({ completed: z.number().int(), total: z.number().int() }),
-  evidenceCount: z.number().int(),
-  academy: z.object({ completed: z.number().int(), total: z.number().int() }),
-});
+import {
+  dashboardSummaryResponseSchema,
+  type DashboardSummaryResponse,
+} from "@/features/api/schemas";
 
-export type DashboardSummary = z.infer<typeof dashboardSummarySchema>;
+import { getDashboardSummary as getDashboardSummaryApi } from "./server-api";
 
-/**
- * MOCK until the backend exposes the player's progress. Replace the body with
- * `serverApi.get("/me/dashboard", dashboardSummarySchema)`; callers stay the same.
- */
+export { dashboardSummaryResponseSchema };
+export type DashboardSummary = DashboardSummaryResponse;
+
+/** Fetch dashboard summary from backend. */
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-  return dashboardSummarySchema.parse({
-    activeCase: { id: "case-001", label: "Case 001" },
-    objectives: { completed: 1, total: 5 },
-    evidenceCount: 0,
-    academy: { completed: 0, total: 8 },
-  });
+  return getDashboardSummaryApi();
 }

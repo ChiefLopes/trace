@@ -7,6 +7,8 @@ import { getDashboardSummary } from "@/features/dashboard/data";
 import { InvestigatorPicker } from "@/features/investigators/components/investigator-picker";
 import { featuredInvestigator, investigators } from "@/features/investigators/data";
 
+import { getSelectedInvestigator } from "@/features/investigators/selection";
+
 import { selectInvestigator } from "./actions";
 
 export const metadata: Metadata = {
@@ -18,7 +20,10 @@ export const metadata: Metadata = {
  * offsets below land each block on its Figma position.
  */
 export default async function DashboardPage() {
-  const summary = await getDashboardSummary();
+  const [summary, selectedInvestigator] = await Promise.all([
+    getDashboardSummary(),
+    getSelectedInvestigator(),
+  ]);
   const tracy = featuredInvestigator.fullBody;
 
   return (
@@ -46,6 +51,7 @@ export default async function DashboardPage() {
           investigators={investigators}
           action={selectInvestigator}
           caseId={summary.activeCase?.id}
+          selectedId={selectedInvestigator.id}
         />
       </div>
 

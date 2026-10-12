@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, CircleCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useActionState, useEffect, useId } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { fieldErrorId } from "@/components/ui/field";
@@ -17,6 +18,7 @@ type EvidenceFormProps = {
   destinations: Choice[];
   scenarios: Choice[];
   theoryPlaceholder: string;
+  caseId: string;
 };
 
 function ChoiceGroup({
@@ -72,26 +74,21 @@ export function EvidenceForm({
   destinations,
   scenarios,
   theoryPlaceholder,
+  caseId,
 }: EvidenceFormProps) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(action, { status: "idle" });
   const theoryId = useId();
   const invalid = state.status === "invalid" ? state : null;
 
-  // The panel below confirms in place; the toast confirms wherever the player is looking.
+  // Redirect to outcome page on success
   useEffect(() => {
-    if (state.status === "received")
+    if (state.status === "received") {
       toast.success("Evidence submitted", { description: state.message });
-  }, [state]);
-
-  if (state.status === "received") {
-    return (
-      <div role="status" className="flex flex-col items-center gap-3 py-10 text-center">
-        <CircleCheck className="size-10 text-accent" />
-        <p className="font-display text-lg font-black uppercase">Evidence submitted</p>
-        <p className="max-w-sm text-xs text-foreground/80">{state.message}</p>
-      </div>
-    );
-  }
+      router.push(`/investigation/${caseId}/outcome`);
+      router.refresh();
+    }
+  }, [state, caseId, router]);
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-[26px]">

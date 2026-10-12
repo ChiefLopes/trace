@@ -3,12 +3,8 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import { defaultInvestigatorId, getInvestigator, type Investigator } from "./data";
+import { getSession } from "@/features/auth/server-api";
 
-/**
- * MOCK persistence: the chosen investigator is kept in a cookie until the
- * backend stores it on the player profile. Then replace both functions with
- * API calls; callers stay the same.
- */
 export const SELECTED_INVESTIGATOR_COOKIE = "trace_investigator";
 
 export const selectedInvestigatorCookieOptions = {
@@ -20,18 +16,36 @@ export const selectedInvestigatorCookieOptions = {
 } as const;
 
 /**
- * Product decision (2026-10-08): until the backend endpoints are integrated,
- * every case page shows the default investigator (the one in the designs).
- * SELECT still records the choice, so switching back is just this flag, or
- * replacing the body below with the player-profile API call.
+ * Investigator choice is stored on the authenticated backend profile,
+ * falling back to local cookie and default.
  */
-const SHOW_PLAYER_CHOICE = false;
+const SHOW_PLAYER_CHOICE = process.env.SHOW_PLAYER_CHOICE !== "false";
 
-/** The player's chosen investigator, or the default one if none was picked (or the cookie is junk). */
+/** The player's chosen investigator, or the design default if none is available. */
 export async function getSelectedInvestigator(): Promise<Investigator> {
   const fallback = getInvestigator(defaultInvestigatorId)!;
   if (!SHOW_PLAYER_CHOICE) return fallback;
 
-  const id = (await cookies()).get(SELECTED_INVESTIGATOR_COOKIE)?.value;
-  return getInvestigator(id) ?? fallback;
+  try {
+    const session = await getSession();
+    if (session.user?.selectedInvestigatorId) {
+      const found = getInvestigator(session.user.selectedInvestigatorId);
+      if (found) return found;
+    }
+  } catch {
+    // Unauthenticated or network error
+  }
+
+  try {
+    const cookieStore = await cookies();
+    const id = cookieStore.get(SELECTED_INVESTIGATOR_COOKIE)?.value;
+    if (id) {
+      const found = getInvestigator(id);
+      if (found) return found;
+    }
+  } catch {
+    // Outside request store
+  }
+
+  return fallback;
 }

@@ -99,7 +99,7 @@ export function LoginForm() {
         // TODO: start the OAuth redirect once the backend exposes it.
         onContinue={(provider) =>
           toast.info(`${oauthProviderName[provider]} sign-in is coming soon`, {
-            description: "Use the demo login from your team for now.",
+            description: "Use email and password sign-in for now.",
           })
         }
       />

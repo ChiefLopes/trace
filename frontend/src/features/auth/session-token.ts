@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /*
- * Stateless session token: `base64url(payload).base64url(HMAC-SHA256)`.
+ * Stateless frontend session marker: `base64url(payload).base64url(HMAC-SHA256)`.
  *
  * Signed, not encrypted: the payload holds nothing secret (player id, display
  * name, expiry), and the signature means it can't be forged or edited without
@@ -9,11 +9,12 @@ import { z } from "zod";
  * the server. Never import it from client code; there is nothing to verify
  * there and the secret must stay server-side.
  *
- * MOCK until the backend issues real sessions; then the backend sets its own
- * cookie and this module is replaced by a call that validates it.
+ * This cookie gates frontend page routes. The backend access token is stored
+ * separately in an HttpOnly cookie and is what API requests send as Bearer.
  */
 
 export const SESSION_COOKIE = "trace_session";
+export const BACKEND_AUTH_COOKIE = process.env.BACKEND_AUTH_COOKIE ?? "trace_backend_token";
 
 const sessionPayloadSchema = z.object({
   /** Player id. */
