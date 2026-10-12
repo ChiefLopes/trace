@@ -134,7 +134,7 @@ export default function EvidencePage(props: Props) {
       <Suspense fallback={<TraceLoader label="Opening the evidence board" />}>
         <EvidenceContent params={props.params} />
       </Suspense>
-      <Suspense>
+      <Suspense fallback={null}>
         <Portrait />
       </Suspense>
     </>

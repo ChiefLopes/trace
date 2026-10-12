@@ -17,28 +17,6 @@ import {
   getTransactionDetail as getTransactionDetailApi,
 } from "./server-api";
 
-export {
-  workspaceSchema,
-  walletDetailSchema,
-  transactionDetailSchema,
-  type ApiWorkspace,
-  type ApiWalletDetail,
-  type ApiTransactionDetail,
-  mockWorkspaceSchema,
-  type MockWorkspace as Workspace,
-  type TimelineEntry,
-  targetSchema as mockTargetSchema,
-  type MockTarget as Target,
-  leadSchema as mockLeadSchema,
-  type MockLead as Lead,
-  transactionSchema,
-  type Transaction,
-  walletActivitySchema,
-  type WalletActivity,
-  mockWalletDetailSchema,
-  type MockWalletDetail as WalletDetail,
-};
-
 /** MOCK types for components - these match the existing component expectations */
 const walletSummarySchema = z.object({
   id: z.string(),
@@ -90,10 +68,100 @@ const mockWorkspaceSchema = z.object({
   lead: leadSchema.nullable(),
 });
 
-type MockWorkspace = z.infer<typeof mockWorkspaceSchema>;
-type TimelineEntry = z.infer<typeof timelineEntrySchema>;
+export type Workspace = z.infer<typeof mockWorkspaceSchema>;
+export type TimelineEntry = z.infer<typeof timelineEntrySchema>;
+type MockWorkspace = Workspace;
 type MockTarget = z.infer<typeof targetSchema>;
 type MockLead = z.infer<typeof leadSchema>;
+
+const SOL = 1_000_000_000;
+
+/** MOCK workspace state, values copied from the design. */
+const workspaces: Record<string, Workspace> = {
+  "case-001": {
+    caseId: "case-001",
+    caseNumber: "Case 001",
+    codename: "The Missing Treasury",
+    objectives: [
+      { text: "Find the transaction where the funds left the treasury", done: false },
+      { text: "Identify the receiving wallet", done: false },
+      { text: "Trace the movement of the funds", done: false },
+      { text: "Collect important evidence", done: false },
+      { text: "Build your theory", done: false },
+    ],
+    investigator: { rank: "Rookie Investigator", state: "Investigating" },
+    hint: "Start with the treasury's outgoing transfers around 02:43 UTC. Which one doesn't fit the pattern?",
+    investigating: {
+      id: "treasury",
+      label: "Treasury Wallet",
+      address: "7xH3k9 ... 92KD",
+      balanceLamports: 50 * SOL,
+      transactionCount: 342,
+      tokenCount: 18,
+    },
+    timeline: [
+      {
+        id: "tx-1",
+        time: "02:39:07",
+        direction: "in",
+        amountLamports: 5 * SOL,
+        counterparty: "4K2c...11ZZ",
+        flagged: false,
+      },
+      {
+        id: "tx-2",
+        time: "02:41:37",
+        direction: "in",
+        amountLamports: 10 * SOL,
+        counterparty: "6A2c...11ZZ",
+        flagged: false,
+      },
+      {
+        id: "tx-3",
+        time: "02:43:18",
+        direction: "out",
+        amountLamports: 20 * SOL,
+        counterparty: "9J4K...82PL",
+        flagged: true,
+      },
+      {
+        id: "tx-4",
+        time: "02:51:04",
+        direction: "in",
+        amountLamports: 2 * SOL,
+        counterparty: "5B3d...22ff",
+        flagged: false,
+      },
+      {
+        id: "tx-5",
+        time: "03:04:42",
+        direction: "out",
+        amountLamports: 1.5 * SOL,
+        counterparty: null,
+        flagged: false,
+      },
+    ],
+    trail: [
+      { id: "treasury", label: "Treasury Wallet", address: "7xH3k9 ... 92KD" },
+      { id: "wallet-b", label: "Wallet B", address: "9J4K ... 82PL" },
+      { id: "wallet-c", label: "Wallet C", address: "3P8N ... 45QR" },
+      { id: "wallet-d", label: "Wallet D", address: "6P9R ... 78ST" },
+      { id: "exchange", label: "Exchange Wallet", address: "8T3W ... 90UV" },
+    ],
+    otherWallets: [{ id: "unknown-1f5g", label: "Unknown wallet", address: "1F5g ... 44UU" }],
+    evidenceCount: 0,
+    lead: {
+      id: "lead-time-window",
+      title: "Something happened here.",
+      message:
+        "Start by checking the transactions around {{02:40–03:00 UTC}}. Look for anything that stands out.",
+      actionLabel: "View transactions",
+      badge: "New lead",
+      trigger: "arrival",
+      target: { kind: "transaction", id: "tx-3" },
+    },
+  },
+};
 
 /** MOCK type for transaction - matches component expectations */
 const transactionSchema = z.object({
@@ -108,7 +176,37 @@ const transactionSchema = z.object({
   lead: leadSchema.nullable(),
 });
 
-type Transaction = z.infer<typeof transactionSchema>;
+export type Transaction = z.infer<typeof transactionSchema>;
+
+/** Any wallet known to the case, on the trail or not. */
+export function findCaseWallet(workspace: Pick<Workspace, "trail" | "otherWallets">, id: string) {
+  return [...workspace.trail, ...workspace.otherWallets].find((w) => w.id === id);
+}
+
+/** MOCK transaction details by case, then transaction id. Signatures are placeholders. */
+const transactions: Record<string, Record<string, Transaction>> = {
+  "case-001": {
+    "tx-3": {
+      id: "tx-3",
+      signature: "5fJ8...2K9L",
+      status: "confirmed",
+      time: "02:43:18 UTC",
+      amountLamports: 20 * SOL,
+      fromWalletId: "treasury",
+      toWalletId: "wallet-b",
+      progress: { completed: 1, total: 5 },
+      lead: {
+        id: "lead-wallet-b",
+        badge: "New lead",
+        trigger: "arrival",
+        title: "Funds were sent to Wallet B.",
+        message: "The funds didn't stay here long. See where Wallet B moved them next.",
+        actionLabel: "Inspect receiving wallet",
+        target: { kind: "wallet", id: "wallet-b" },
+      },
+    },
+  },
+};
 
 /** MOCK type for wallet activity - matches component expectations */
 const walletActivitySchema = z.object({
@@ -122,7 +220,7 @@ const walletActivitySchema = z.object({
   link: targetSchema,
 });
 
-type WalletActivity = z.infer<typeof walletActivitySchema>;
+export type WalletActivity = z.infer<typeof walletActivitySchema>;
 
 /** MOCK type for wallet detail - matches component expectations */
 const mockWalletDetailSchema = z.object({
@@ -140,34 +238,78 @@ const mockWalletDetailSchema = z.object({
   activity: z.array(walletActivitySchema),
 });
 
-type MockWalletDetail = z.infer<typeof mockWalletDetailSchema>;
+export type WalletDetail = z.infer<typeof mockWalletDetailSchema>;
+type MockWalletDetail = WalletDetail;
 
-/** Any wallet known to the case, on the trail or not. */
-export function findCaseWallet(
-  workspace: Pick<MockWorkspace, "trail" | "otherWallets">,
-  id: string,
-) {
-  return [...workspace.trail, ...workspace.otherWallets].find((w) => w.id === id);
-}
+/** MOCK wallet details by case, then trail wallet id. Values copied from the design. */
+const wallets: Record<string, Record<string, WalletDetail>> = {
+  "case-001": {
+    "wallet-b": {
+      id: "wallet-b",
+      label: "Wallet B",
+      address: "9J4Kp2Lm8Qr5Vx3Nw7Zc1Tb6Fd4Gh9Mn2Qp8Rv5Vx3N82PL",
+      description: "A freshly created wallet with no prior history. Received the missing funds.",
+      balanceLamports: 0.5 * SOL,
+      transactionCount: 12,
+      tokenCount: 3,
+      firstActivity: "2026-10-01",
+      lastActivity: "2026-10-01",
+      receivedFromWalletId: "treasury",
+      sentToWalletId: "wallet-c",
+      activity: [
+        {
+          id: "wb-1",
+          time: "02:43:18",
+          direction: "in",
+          amountLamports: 20 * SOL,
+          counterparty: "7xH3k9...92KD",
+          key: true,
+          flagged: true,
+          link: { kind: "transaction", id: "tx-3" },
+        },
+      ],
+    },
+  },
+};
 
 /** A case is solved once every objective is done (derived, never stored separately). */
-export function isSolved(workspace: Pick<MockWorkspace, "objectives">) {
+export function isSolved(workspace: Pick<Workspace, "objectives">) {
   return workspace.objectives.length > 0 && workspace.objectives.every((o) => o.done);
 }
 
-/** Fetch workspace from backend. Returns null if not found. */
-export async function getWorkspace(caseId: string): Promise<MockWorkspace | null> {
+/**
+ * MOCK preview of a finished case, until the backend tracks real progress:
+ * every objective done, no pending lead.
+ */
+export type WorkspacePreview = "solved";
+
+/** Fetch workspace from backend with fallback to mock workspace. */
+export async function getWorkspace(
+  caseId: string,
+  preview?: WorkspacePreview,
+): Promise<Workspace | null> {
+  let workspace: Workspace | null = null;
   try {
-    const workspace = await getWorkspaceApi(caseId);
-    const mockWorkspace = convertToMockWorkspace(workspace);
-    return mockWorkspace;
+    const apiWorkspace = await getWorkspaceApi(caseId);
+    if (apiWorkspace) {
+      workspace = convertToMockWorkspace(apiWorkspace);
+    }
   } catch (error) {
     if (error instanceof z.ZodError) throw error;
-    if (error instanceof Error && error.name === "ApiError" && error.message.includes("404")) {
-      return null;
-    }
-    throw error;
   }
+
+  if (!workspace) {
+    const found = workspaces[caseId];
+    workspace = found ? mockWorkspaceSchema.parse(found) : null;
+  }
+
+  if (!workspace) return null;
+  if (preview !== "solved") return workspace;
+  return {
+    ...workspace,
+    objectives: workspace.objectives.map((o) => ({ ...o, done: true })),
+    lead: null,
+  };
 }
 
 /** Convert API Workspace to MockWorkspace for components. */
@@ -220,18 +362,18 @@ function convertToMockWorkspace(apiWorkspace: ApiWorkspace): MockWorkspace {
   };
 }
 
-/** Fetch transaction detail from backend. Returns null if not found. */
+/** Fetch transaction detail from backend with fallback to mock transaction. */
 export async function getTransaction(caseId: string, id: string): Promise<Transaction | null> {
   try {
     const apiTransaction = await getTransactionDetailApi(caseId, id);
-    return convertToMockTransaction(apiTransaction);
+    if (apiTransaction) {
+      return convertToMockTransaction(apiTransaction);
+    }
   } catch (error) {
     if (error instanceof z.ZodError) throw error;
-    if (error instanceof Error && error.name === "ApiError" && error.message.includes("404")) {
-      return null;
-    }
-    throw error;
   }
+  const found = transactions[caseId]?.[id];
+  return found ? transactionSchema.parse(found) : null;
 }
 
 /** Convert API TransactionDetail to mock Transaction for components. */
@@ -259,25 +401,22 @@ function convertToMockTransaction(apiTx: ApiTransactionDetail): Transaction {
   };
 }
 
-/** Fetch wallet detail from backend. Returns null if not found. */
-export async function getWalletDetail(
-  caseId: string,
-  id: string,
-): Promise<MockWalletDetail | null> {
+/** Fetch wallet detail from backend with fallback to mock wallet. */
+export async function getWalletDetail(caseId: string, id: string): Promise<WalletDetail | null> {
   try {
     const apiWallet = await getWalletDetailApi(caseId, id);
-    return convertToMockWalletDetail(apiWallet);
+    if (apiWallet) {
+      return convertToMockWalletDetail(apiWallet);
+    }
   } catch (error) {
     if (error instanceof z.ZodError) throw error;
-    if (error instanceof Error && error.name === "ApiError" && error.message.includes("404")) {
-      return null;
-    }
-    throw error;
   }
+  const found = wallets[caseId]?.[id];
+  return found ? mockWalletDetailSchema.parse(found) : null;
 }
 
 /** Convert API WalletDetail to MockWalletDetail for components. */
-function convertToMockWalletDetail(apiWallet: ApiWalletDetail): MockWalletDetail {
+function convertToMockWalletDetail(apiWallet: ApiWalletDetail): WalletDetail {
   return {
     id: apiWallet.id,
     label: apiWallet.label,
@@ -291,8 +430,6 @@ function convertToMockWalletDetail(apiWallet: ApiWalletDetail): MockWalletDetail
     receivedFromWalletId: apiWallet.receivedFromWalletId,
     sentToWalletId: apiWallet.sentToWalletId,
     activity: apiWallet.activity.map((a) => {
-      // Activity rows in wallet view represent transactions.
-      // If the API provided a transaction link use it; otherwise use the entry's transaction ID.
       const txId = a.link?.kind === "transaction" && a.link.id ? a.link.id : a.id;
       return {
         id: a.id,
@@ -308,25 +445,32 @@ function convertToMockWalletDetail(apiWallet: ApiWalletDetail): MockWalletDetail
   };
 }
 
-// Known params for static generation (generateStaticParams)
-export const transactionParams: Array<{ caseId: string; transactionId: string }> = [
-  { caseId: "case-001", transactionId: "tx-drain" },
-  { caseId: "case-001", transactionId: "tx-drain-in" },
-  { caseId: "case-001", transactionId: "tx-hop-1" },
-  { caseId: "case-001", transactionId: "tx-hop-1-in" },
-  { caseId: "case-001", transactionId: "tx-hop-2" },
-  { caseId: "case-001", transactionId: "tx-hop-2-in" },
-  { caseId: "case-001", transactionId: "tx-deposit" },
-  { caseId: "case-001", transactionId: "tx-deposit-in" },
-];
+export const transactionParams = Object.entries(transactions).flatMap(([caseId, byId]) =>
+  Object.keys(byId).map((transactionId) => ({ caseId, transactionId })),
+);
 
-export const walletParams: Array<{ caseId: string; walletId: string }> = [
-  { caseId: "case-001", walletId: "treasury" },
-  { caseId: "case-001", walletId: "wallet-b" },
-  { caseId: "case-001", walletId: "wallet-c" },
-  { caseId: "case-001", walletId: "wallet-d" },
-  { caseId: "case-001", walletId: "exchange" },
-];
+export const walletParams = Object.entries(wallets).flatMap(([caseId, byId]) =>
+  Object.keys(byId).map((walletId) => ({ caseId, walletId })),
+);
 
-/** Mock case IDs for static generation - replace with real API when available. */
+/** Mock case IDs for static generation. */
 export const caseIds: string[] = ["case-001"];
+
+export {
+  workspaceSchema,
+  walletDetailSchema,
+  transactionDetailSchema,
+  type ApiWorkspace,
+  type ApiWalletDetail,
+  type ApiTransactionDetail,
+  mockWorkspaceSchema,
+  type MockWorkspace,
+  targetSchema as mockTargetSchema,
+  type MockTarget as Target,
+  leadSchema as mockLeadSchema,
+  type MockLead as Lead,
+  transactionSchema,
+  walletActivitySchema,
+  mockWalletDetailSchema,
+  type MockWalletDetail,
+};

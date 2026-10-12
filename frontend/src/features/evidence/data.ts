@@ -20,7 +20,28 @@ import {
 export { evidencePromptSchema, caseOutcomeSchema, THEORY_MIN_LENGTH, THEORY_MAX_LENGTH };
 export type { EvidencePrompt, CaseOutcome };
 
-/** Validates a submission against the case's own choices. */
+/** MOCK prompts by case, copied from the design. */
+const prompts: Record<string, EvidencePrompt> = {
+  "case-001": {
+    caseId: "case-001",
+    destinationWalletIds: ["wallet-b", "wallet-c", "wallet-d", "exchange"],
+    scenarios: [
+      { id: "direct", label: "A single direct transfer" },
+      { id: "layered", label: "Layered through multiple wallets then cashed out" },
+      { id: "swapped", label: "Swapped into a token then back" },
+      { id: "burned", label: "Burned to a null address" },
+    ],
+    theoryPlaceholder:
+      "Explain the trail in your own words... e.g. 'The 20 SOL left the treasury at 02:43, hopped through three fresh wallets, and ended at an exchange deposit address.'",
+  },
+};
+
+export const evidenceCaseIds: string[] = Object.keys(prompts);
+
+/**
+ * Validates a submission against the case's own choices, so a tampered form
+ * can't submit an option that was never offered.
+ */
 export function evidenceSubmissionSchema(prompt: EvidencePrompt) {
   return z.object({
     destination: z.enum(prompt.destinationWalletIds as [string, ...string[]], {
@@ -46,17 +67,16 @@ export type EvidenceFormState =
     }
   | { status: "received"; message: string };
 
-/** Fetch evidence prompt from backend. Returns null if not found. */
+/** Fetch evidence prompt from backend with fallback to mock prompts. */
 export async function getEvidencePrompt(caseId: string): Promise<EvidencePrompt | null> {
   try {
-    return await getEvidencePromptApi(caseId);
+    const prompt = await getEvidencePromptApi(caseId);
+    if (prompt) return prompt;
   } catch (error) {
     if (error instanceof z.ZodError) throw error;
-    if (error instanceof Error && error.name === "ApiError" && error.message.includes("404")) {
-      return null;
-    }
-    throw error;
   }
+  const found = prompts[caseId];
+  return found ? evidencePromptSchema.parse(found) : null;
 }
 
 /** Submit case theory to backend. */
@@ -67,7 +87,7 @@ export async function submitCaseTheory(
   return submitCaseTheoryApi(caseId, values);
 }
 
-/** Fetch case outcome from backend. Returns null if not found. */
+/** Fetch case outcome from backend. */
 export async function getCaseOutcome(caseId: string): Promise<CaseOutcome | null> {
   try {
     return await getCaseOutcomeApi(caseId);
@@ -76,9 +96,6 @@ export async function getCaseOutcome(caseId: string): Promise<CaseOutcome | null
     if (error instanceof Error && error.name === "ApiError" && error.message.includes("404")) {
       return null;
     }
-    throw error;
+    return null;
   }
 }
-
-// MOCK case IDs for static generation - replace with real API when available
-export const evidenceCaseIds: string[] = ["case-001"];
