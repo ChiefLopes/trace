@@ -201,7 +201,7 @@ export function AddEvidenceButton({
                     <ul className="space-y-2.5">
                       {evidenceList.map((item) => (
                         <li
-                          key={`${item.kind}:${item.targetId}`}
+                          key={item.id ?? `${item.kind}:${item.targetId}`}
                           className="rounded-md border border-white/5 bg-[#060e33] p-3 transition-colors"
                         >
                           <div className="flex items-center justify-between gap-2">

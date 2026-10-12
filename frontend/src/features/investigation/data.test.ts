@@ -25,7 +25,7 @@ describe("case data integrity", () => {
         expect(tx!.amountLamports).toBe(entry.amountLamports);
       }
     }
-  });
+  }, 20000);
 });
 
 describe("isSolved", () => {

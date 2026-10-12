@@ -75,7 +75,7 @@ async function EvidenceContent({ params }: Pick<Props, "params">) {
           <ul className="mt-3 divide-y divide-white/10">
             {evidence.map((item) => (
               <li
-                key={`${item.kind}:${item.targetId}`}
+                key={item.id ?? `${item.kind}:${item.targetId}`}
                 className="flex items-start justify-between gap-4 py-3"
               >
                 <div className="min-w-0 flex-1">
