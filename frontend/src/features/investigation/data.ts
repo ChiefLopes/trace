@@ -312,7 +312,7 @@ export async function getWorkspace(
   };
 }
 
-/** Convert API Workspace to MockWorkspace for components. */
+/** Convert API Workspace to MockWorkspace for components.. */
 function convertToMockWorkspace(apiWorkspace: ApiWorkspace): MockWorkspace {
   return {
     caseId: apiWorkspace.caseId,
