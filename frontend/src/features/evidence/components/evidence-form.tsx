@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
-import { useActionState, useEffect, useId } from "react";
+import { ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { useActionState, useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { fieldErrorId } from "@/components/ui/field";
 import { FormAlert } from "@/components/ui/form-alert";
+import { TraceLossModal } from "@/features/investigation/components/trace-loss-modal";
 import { cn } from "@/lib/utils/cn";
 
 import type { EvidenceFormState } from "../data";
@@ -19,6 +20,8 @@ type EvidenceFormProps = {
   scenarios: Choice[];
   theoryPlaceholder: string;
   caseId: string;
+  evidenceCount?: number;
+  defaultDestination?: string;
 };
 
 function ChoiceGroup({
@@ -68,80 +71,137 @@ function ChoiceGroup({
   );
 }
 
-/** "Where did the funds go?" Pick destination + scenario, write a theory, submit. */
+/** "Where did the funds go?" Pick destination + scenario, write a theory, verify trace. */
 export function EvidenceForm({
   action,
   destinations,
   scenarios,
   theoryPlaceholder,
   caseId,
+  evidenceCount = 0,
+  defaultDestination,
 }: EvidenceFormProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(action, { status: "idle" });
+  const [isLossModalOpen, setIsLossModalOpen] = useState(false);
   const theoryId = useId();
   const invalid = state.status === "invalid" ? state : null;
 
   // Redirect to outcome page on success
   useEffect(() => {
     if (state.status === "received") {
-      toast.success("Evidence submitted", { description: state.message });
+      toast.success("Trace verified! Case solved.", { description: state.message });
       router.push(`/investigation/${caseId}/outcome`);
       router.refresh();
     }
   }, [state, caseId, router]);
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (evidenceCount === 0) {
+      e.preventDefault();
+      toast.warning("Evidence required", {
+        description:
+          "Please pin at least one piece of evidence from your investigation before verifying the trace.",
+      });
+      return;
+    }
+
+    const formData = new FormData(e.currentTarget);
+    const destination = formData.get("destination");
+
+    // If a destination was picked and it's not the correct exchange wallet, show loss modal
+    if (destination && destination !== "exchange") {
+      e.preventDefault();
+      setIsLossModalOpen(true);
+      return;
+    }
+  };
+
   return (
-    <form action={formAction} noValidate className="flex flex-col gap-[26px]">
-      {invalid && <FormAlert message="Check the highlighted answers and try again." />}
-
-      <ChoiceGroup
-        name="destination"
-        legend="Which wallet was the final destination?"
-        choices={destinations}
-        error={invalid?.fieldErrors.destination}
-        defaultValue={invalid?.values.destination}
-      />
-      <ChoiceGroup
-        name="scenario"
-        legend="What happened?"
-        choices={scenarios}
-        error={invalid?.fieldErrors.scenario}
-        defaultValue={invalid?.values.scenario}
-      />
-
-      <div>
-        <label htmlFor={theoryId} className="text-[13px] font-semibold">
-          Your Theory
-        </label>
-        <textarea
-          id={theoryId}
-          name="theory"
-          rows={4}
-          defaultValue={invalid?.values.theory}
-          placeholder={theoryPlaceholder}
-          aria-invalid={!!invalid?.fieldErrors.theory}
-          aria-describedby={invalid?.fieldErrors.theory ? fieldErrorId("theory") : undefined}
-          className={cn(
-            "mt-3 w-full resize-y rounded-lg border bg-[#070d2b]/80 px-3.5 py-3 text-xs leading-relaxed placeholder:text-[#7c84a0]",
-            "outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/30",
-            invalid?.fieldErrors.theory ? "border-destructive/60" : "border-white/[0.08]",
-          )}
-        />
-        {invalid?.fieldErrors.theory && (
-          <p id={fieldErrorId("theory")} className="mt-2 text-xs text-destructive">
-            {invalid.fieldErrors.theory}
-          </p>
-        )}
-      </div>
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="flex h-[45px] items-center justify-center gap-2 rounded-xl bg-accent font-display text-[11px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_8px_20px_-8px_var(--accent)] transition-[filter] hover:brightness-110 disabled:opacity-70"
+    <>
+      <form
+        action={formAction}
+        onSubmit={handleSubmit}
+        noValidate
+        className="flex flex-col gap-[26px]"
       >
-        {pending ? "Submitting…" : "Submit evidence"}
-        <ArrowRight className="size-4" strokeWidth={2.25} />
-      </button>
-    </form>
+        {invalid && <FormAlert message="Check the highlighted answers and try again." />}
+
+        {evidenceCount === 0 && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+            ⚠️ <strong>Evidence reminder:</strong> You currently have 0 pinned items. Pin wallets or
+            transactions from your investigation before verifying trace.
+          </div>
+        )}
+
+        <ChoiceGroup
+          name="destination"
+          legend="Which wallet was the final destination?"
+          choices={destinations}
+          error={invalid?.fieldErrors.destination}
+          defaultValue={invalid?.values.destination ?? defaultDestination}
+        />
+        <ChoiceGroup
+          name="scenario"
+          legend="What happened?"
+          choices={scenarios}
+          error={invalid?.fieldErrors.scenario}
+          defaultValue={invalid?.values.scenario}
+        />
+
+        <div>
+          <label htmlFor={theoryId} className="text-[13px] font-semibold">
+            Your Theory
+          </label>
+          <textarea
+            id={theoryId}
+            name="theory"
+            rows={4}
+            defaultValue={invalid?.values.theory}
+            placeholder={theoryPlaceholder}
+            aria-invalid={!!invalid?.fieldErrors.theory}
+            aria-describedby={invalid?.fieldErrors.theory ? fieldErrorId("theory") : undefined}
+            className={cn(
+              "mt-3 w-full resize-y rounded-lg border bg-[#070d2b]/80 px-3.5 py-3 text-xs leading-relaxed placeholder:text-[#7c84a0]",
+              "outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/30",
+              invalid?.fieldErrors.theory ? "border-destructive/60" : "border-white/[0.08]",
+            )}
+          />
+          {invalid?.fieldErrors.theory && (
+            <p id={fieldErrorId("theory")} className="mt-2 text-xs text-destructive">
+              {invalid.fieldErrors.theory}
+            </p>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="flex h-[45px] items-center justify-center gap-2 rounded-xl bg-accent font-display text-[12px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_8px_20px_-8px_var(--accent)] transition-[filter] hover:brightness-110 disabled:opacity-70"
+        >
+          {pending ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Verifying Trace…
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="size-4" strokeWidth={2.5} />
+              Verify Trace
+              <ArrowRight className="size-4" strokeWidth={2.25} />
+            </>
+          )}
+        </button>
+      </form>
+
+      <TraceLossModal
+        isOpen={isLossModalOpen}
+        onClose={() => setIsLossModalOpen(false)}
+        onRetry={() => setIsLossModalOpen(false)}
+        title="Investigation Trail Lost"
+        message="The final destination wallet you selected is incorrect. Stolen funds continued moving past this address or never arrived there. Review your transactions and trail evidence."
+        caseId={caseId}
+      />
+    </>
   );
 }

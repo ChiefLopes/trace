@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,8 +26,12 @@ export const metadata: Metadata = {
   title: "Add evidence",
 };
 
-async function EvidenceContent({ params }: Pick<Props, "params">) {
+async function EvidenceContent({ params, searchParams }: Props) {
   const { caseId } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const fromWallet = typeof sp.fromWallet === "string" ? sp.fromWallet : undefined;
+  const isVerifiedRedirect = sp.verified === "1";
+
   const [prompt, workspace, evidence] = await Promise.all([
     getEvidencePrompt(caseId),
     getWorkspace(caseId),
@@ -56,6 +60,19 @@ async function EvidenceContent({ params }: Pick<Props, "params">) {
       <h1 className="mt-[22px] font-display text-[clamp(1.5rem,2.1vw,1.875rem)] leading-none font-black tracking-tight uppercase">
         Add some evidence
       </h1>
+
+      {isVerifiedRedirect && (
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-4 text-xs">
+          <ShieldCheck className="size-5 shrink-0 text-accent" />
+          <div>
+            <p className="font-semibold text-accent">Final Destination Located</p>
+            <p className="text-[#c9d4ee]">
+              You reached the end of the trace! Pin your evidence below and click Verify Trace to
+              complete the case.
+            </p>
+          </div>
+        </div>
+      )}
 
       <section
         aria-labelledby="evidence-collection"
@@ -121,6 +138,8 @@ async function EvidenceContent({ params }: Pick<Props, "params">) {
             scenarios={prompt.scenarios.map((s) => ({ value: s.id, label: s.label }))}
             theoryPlaceholder={prompt.theoryPlaceholder}
             caseId={caseId}
+            evidenceCount={evidence.length}
+            defaultDestination={fromWallet ?? "exchange"}
           />
         </div>
       </section>
@@ -132,7 +151,7 @@ export default function EvidencePage(props: Props) {
   return (
     <>
       <Suspense fallback={<TraceLoader label="Opening the evidence board" />}>
-        <EvidenceContent params={props.params} />
+        <EvidenceContent params={props.params} searchParams={props.searchParams} />
       </Suspense>
       <Suspense fallback={null}>
         <Portrait />

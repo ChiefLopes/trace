@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { TraceLoader } from "@/components/feedback/trace-loader";
 import { caseRoutes } from "@/features/cases/routes";
 import { WalletDetail } from "@/features/investigation/components/wallet-detail";
+import { listEvidence } from "@/features/evidence/server-api";
 import { getWalletDetail, getWorkspace, walletParams } from "@/features/investigation/data";
 import { getSelectedInvestigator } from "@/features/investigators/selection";
 
@@ -25,10 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 async function WalletContent({ params }: Pick<Props, "params">) {
   const { caseId, walletId } = await params;
-  const [wallet, workspace, investigator] = await Promise.all([
-    getWalletDetail(caseId, decodeURIComponent(walletId)),
+  const decodedWalletId = decodeURIComponent(walletId);
+  const [wallet, workspace, investigator, evidence] = await Promise.all([
+    getWalletDetail(caseId, decodedWalletId),
     getWorkspace(caseId),
     getSelectedInvestigator(),
+    listEvidence(caseId),
   ]);
   if (!wallet || !workspace) notFound();
 
@@ -37,6 +40,11 @@ async function WalletContent({ params }: Pick<Props, "params">) {
     const found = id ? workspace.trail.find((w) => w.id === id) : undefined;
     return found ? { label: found.label, href: caseRoutes.wallet(caseId, found.id) } : null;
   };
+
+  const isFinalDestination =
+    wallet.id === "exchange" ||
+    (wallet.sentToWalletId === null && wallet.receivedFromWalletId !== null) ||
+    (workspace.trail.length > 0 && workspace.trail[workspace.trail.length - 1]?.id === wallet.id);
 
   return (
     <div className="relative max-w-[1022px] lg:ml-[31px]">
@@ -66,6 +74,8 @@ async function WalletContent({ params }: Pick<Props, "params">) {
           sentTo={neighbor(wallet.sentToWalletId)}
           targetHref={(target) => caseRoutes.target(caseId, target)}
           caseId={caseId}
+          isFinalDestination={isFinalDestination}
+          evidenceCount={evidence.length}
         />
       </div>
     </div>

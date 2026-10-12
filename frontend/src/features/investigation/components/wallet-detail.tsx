@@ -10,6 +10,7 @@ import { formatLongDate } from "@/lib/utils/date";
 
 import type { Target, WalletActivity, WalletDetail as WalletDetailData } from "../data";
 import { AddToEvidenceLink } from "./add-to-evidence-link";
+import { VerifyTraceButton } from "./verify-trace-button";
 
 function SectionLabel({
   id,
@@ -140,6 +141,8 @@ type WalletDetailProps = {
   sentTo: Neighbor;
   targetHref: (target: Target) => Route;
   caseId: string;
+  isFinalDestination?: boolean;
+  evidenceCount?: number;
 };
 
 export function WalletDetail({
@@ -148,6 +151,8 @@ export function WalletDetail({
   sentTo,
   targetHref,
   caseId,
+  isFinalDestination = false,
+  evidenceCount = 0,
 }: WalletDetailProps) {
   return (
     <article
@@ -169,13 +174,23 @@ export function WalletDetail({
           </p>
           <p className="mt-2.5 text-xs text-foreground/85">{wallet.description}</p>
         </div>
-        <AddToEvidenceLink
-          caseId={caseId}
-          kind="wallet"
-          targetId={wallet.id}
-          label={wallet.label}
-          className="h-[33px] text-[11px]"
-        />
+        <div className="flex flex-wrap items-center gap-2.5">
+          <VerifyTraceButton
+            caseId={caseId}
+            walletId={wallet.id}
+            walletLabel={wallet.label}
+            isFinalDestination={isFinalDestination}
+            evidenceCount={evidenceCount}
+            className="h-[33px] text-[11px]"
+          />
+          <AddToEvidenceLink
+            caseId={caseId}
+            kind="wallet"
+            targetId={wallet.id}
+            label={wallet.label}
+            className="h-[33px] text-[11px]"
+          />
+        </div>
       </header>
 
       <section aria-labelledby="wallet-overview" className="mt-[30px]">
@@ -249,7 +264,14 @@ export function WalletDetail({
         </ol>
       </section>
 
-      <div className="mt-8 flex flex-wrap gap-2.5">
+      <div className="mt-8 flex flex-wrap items-center gap-2.5">
+        <VerifyTraceButton
+          caseId={caseId}
+          walletId={wallet.id}
+          walletLabel={wallet.label}
+          isFinalDestination={isFinalDestination}
+          evidenceCount={evidenceCount}
+        />
         <AddToEvidenceLink
           caseId={caseId}
           kind="wallet"
