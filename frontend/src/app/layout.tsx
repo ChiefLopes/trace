@@ -32,11 +32,20 @@ export const metadata: Metadata = {
     template: `%s · ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/avatar.svg", type: "image/svg+xml" },
+      { url: "/avatar.png", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png" }],
+  },
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [{ url: "/project-avatar.png", width: 180, height: 180, alt: "TRACE Project Avatar" }],
   },
 };
 
