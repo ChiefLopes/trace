@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { toast } from "sonner";
 
 import { FLASH_COOKIE, FLASH_MESSAGES, isFlashKey } from "./messages";
@@ -15,8 +15,7 @@ function takeFlash() {
   return isFlashKey(key) ? key : null;
 }
 
-/** Shows any flash message the server left, on load and after each navigation. */
-export function FlashToasts() {
+function FlashToastsContent() {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -28,4 +27,13 @@ export function FlashToasts() {
   }, [pathname]);
 
   return null;
+}
+
+/** Shows any flash message the server left, on load and after each navigation. */
+export function FlashToasts() {
+  return (
+    <Suspense fallback={null}>
+      <FlashToastsContent />
+    </Suspense>
+  );
 }
