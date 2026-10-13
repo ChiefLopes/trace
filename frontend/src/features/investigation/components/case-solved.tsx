@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -69,6 +73,9 @@ type CaseSolvedProps = {
 };
 
 export function CaseSolved({ outcome, portrait, homeHref, nextCaseHref }: CaseSolvedProps) {
+  const [isGoingHome, setIsGoingHome] = useState(false);
+  const [isStartingNext, setIsStartingNext] = useState(false);
+  const isNavigating = isGoingHome || isStartingNext;
   const perfect = outcome.score === outcome.maxScore;
 
   return (
@@ -185,29 +192,55 @@ export function CaseSolved({ outcome, portrait, homeHref, nextCaseHref }: CaseSo
             <div className="relative z-10 mt-4 flex w-full flex-col-reverse items-stretch justify-center gap-2.5 pt-2 pb-1 sm:mt-5 sm:flex-row sm:items-center sm:gap-3 lg:absolute lg:top-[688.6px] lg:right-[29.43px] lg:left-[39.41px] lg:mt-0 lg:w-auto lg:gap-[12.08px] lg:p-0 lg:pt-[6.9px]">
               <Link
                 href={homeHref}
-                className="flex items-center justify-center gap-[6.9px] rounded-[10.35px] border-[0.86px] border-white/15 bg-[rgb(1_6_20/0.8)] px-5 py-3 font-display text-xs font-bold tracking-[0.6px] text-[#d1d5db] uppercase shadow-[0_0.86px_1.73px_rgb(0_0_0/0.05)] transition-colors hover:border-white/30 sm:px-[21.56px] sm:py-[11.21px] sm:text-[12.08px]"
+                onClick={() => setIsGoingHome(true)}
+                className={cn(
+                  "flex items-center justify-center gap-[6.9px] rounded-[10.35px] border-[0.86px] border-white/15 bg-[rgb(1_6_20/0.8)] px-5 py-3 font-display text-xs font-bold tracking-[0.6px] text-[#d1d5db] uppercase shadow-[0_0.86px_1.73px_rgb(0_0_0/0.05)] transition-colors hover:border-white/30 sm:px-[21.56px] sm:py-[11.21px] sm:text-[12.08px]",
+                  isNavigating && "pointer-events-none cursor-wait opacity-85",
+                )}
               >
-                <Image
-                  src="/icons/outcome/home.svg"
-                  alt=""
-                  width={14}
-                  height={14}
-                  className="size-[13.8px]"
-                />
-                Home
+                {isGoingHome ? (
+                  <>
+                    <Loader2 className="size-[13.8px] shrink-0 animate-spin text-[#d1d5db]" />
+                    <span>Loading…</span>
+                  </>
+                ) : (
+                  <>
+                    <Image
+                      src="/icons/outcome/home.svg"
+                      alt=""
+                      width={14}
+                      height={14}
+                      className="size-[13.8px]"
+                    />
+                    <span>Home</span>
+                  </>
+                )}
               </Link>
               <Link
                 href={nextCaseHref}
-                className="flex items-center justify-center gap-[8.63px] rounded-[10.35px] bg-linear-to-r from-accent via-[#ffbb33] to-accent px-6 py-3.5 font-display text-xs font-black tracking-[1.21px] text-[#010614] uppercase shadow-[0_0_21.56px_rgb(252_163_17/0.55)] transition-[filter] hover:brightness-110 sm:px-[27.6px] sm:py-[12.08px] sm:text-[12.08px]"
+                onClick={() => setIsStartingNext(true)}
+                className={cn(
+                  "flex items-center justify-center gap-[8.63px] rounded-[10.35px] bg-linear-to-r from-accent via-[#ffbb33] to-accent px-6 py-3.5 font-display text-xs font-black tracking-[1.21px] text-[#010614] uppercase shadow-[0_0_21.56px_rgb(252_163_17/0.55)] transition-[filter] hover:brightness-110 sm:px-[27.6px] sm:py-[12.08px] sm:text-[12.08px]",
+                  isNavigating && "pointer-events-none cursor-wait opacity-85",
+                )}
               >
-                Start new case
-                <Image
-                  src="/icons/outcome/arrow.svg"
-                  alt=""
-                  width={14}
-                  height={14}
-                  className="size-[13.8px]"
-                />
+                {isStartingNext ? (
+                  <>
+                    <Loader2 className="size-[13.8px] shrink-0 animate-spin text-[#010614]" />
+                    <span>Starting…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Start new case</span>
+                    <Image
+                      src="/icons/outcome/arrow.svg"
+                      alt=""
+                      width={14}
+                      height={14}
+                      className="size-[13.8px]"
+                    />
+                  </>
+                )}
               </Link>
             </div>
           </div>

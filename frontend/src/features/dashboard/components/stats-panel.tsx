@@ -1,6 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 
 import type { DashboardSummary } from "../data";
 
@@ -30,6 +35,7 @@ export function StatsPanel({
   summary: DashboardSummary;
   resumeHref: Route;
 }) {
+  const [isResuming, setIsResuming] = useState(false);
   const { activeCase, objectives, evidenceCount, academy } = summary;
   const percent = objectives.total
     ? Math.round((objectives.completed / objectives.total) * 100)
@@ -93,16 +99,29 @@ export function StatsPanel({
             <div className="flex lg:flex-1 lg:justify-end">
               <Link
                 href={resumeHref}
-                className="flex items-center gap-2 rounded-[19px] bg-accent px-6 py-2.5 font-display text-sm leading-5 font-black text-black uppercase shadow-[0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1)] transition-[filter] hover:brightness-110"
+                onClick={() => setIsResuming(true)}
+                className={cn(
+                  "flex items-center gap-2 rounded-[19px] bg-accent px-6 py-2.5 font-display text-sm leading-5 font-black text-black uppercase shadow-[0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1)] transition-[filter] hover:brightness-110",
+                  isResuming && "pointer-events-none cursor-wait opacity-85",
+                )}
               >
-                Resume
-                <Image
-                  src="/icons/arrow-right-black.svg"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="size-4"
-                />
+                {isResuming ? (
+                  <>
+                    <Loader2 className="size-4 shrink-0 animate-spin text-black" />
+                    <span>Resuming…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Resume</span>
+                    <Image
+                      src="/icons/arrow-right-black.svg"
+                      alt=""
+                      width={16}
+                      height={16}
+                      className="size-4"
+                    />
+                  </>
+                )}
               </Link>
             </div>
           </div>

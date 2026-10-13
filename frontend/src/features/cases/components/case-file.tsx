@@ -12,6 +12,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { Loader2 } from "lucide-react";
+
 import { renderHighlights } from "@/lib/text/highlight";
 import { cn } from "@/lib/utils/cn";
 
@@ -145,6 +147,7 @@ export function CaseFile({ caseFile, beginHref, className }: CaseFileProps) {
   );
 
   const [isComplete, setIsComplete] = useState(() => prefersReducedMotion);
+  const [isBeginning, setIsBeginning] = useState(false);
 
   // Progressive reveal steps
   const [numberChars, setNumberChars] = useState(() => (prefersReducedMotion ? number.length : 0));
@@ -477,25 +480,36 @@ export function CaseFile({ caseFile, beginHref, className }: CaseFileProps) {
       <div className="flex w-full justify-center px-5 pt-4 pb-2 lg:px-[32.29px] lg:pt-6">
         <Link
           href={beginHref}
+          onClick={() => setIsBeginning(true)}
           className={cn(
             "group relative flex h-[54px] w-full max-w-[570px] shrink-0 items-center justify-center gap-3 overflow-hidden rounded-full bg-linear-to-r from-[#fca311] via-[#ffbe4d] to-[#fca311] px-6 font-display text-[15px] font-black tracking-wider text-[#020512] uppercase shadow-[0_4px_25px_rgba(252,163,17,0.4)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-[0_8px_36px_rgba(252,163,17,0.75),0_10px_24px_rgba(0,0,0,0.4)] hover:brightness-105 active:translate-y-0 active:scale-[0.98]",
             isComplete
               ? "translate-y-0 opacity-100"
               : "pointer-events-none translate-y-3 opacity-0",
+            isBeginning && "pointer-events-none cursor-wait opacity-85",
           )}
         >
           <span
             aria-hidden
             className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
           />
-          <span className="relative z-10">Begin investigation</span>
-          <Image
-            src="/icons/arrow-line.svg"
-            alt=""
-            width={20}
-            height={20}
-            className="relative z-10 size-5 -scale-y-100 -rotate-90 transition-transform duration-200 group-hover:translate-x-2 group-hover:scale-110"
-          />
+          {isBeginning ? (
+            <span className="relative z-10 flex items-center gap-2.5">
+              <Loader2 className="size-5 animate-spin" />
+              <span>Opening workspace…</span>
+            </span>
+          ) : (
+            <>
+              <span className="relative z-10">Begin investigation</span>
+              <Image
+                src="/icons/arrow-line.svg"
+                alt=""
+                width={20}
+                height={20}
+                className="relative z-10 size-5 -scale-y-100 -rotate-90 transition-transform duration-200 group-hover:translate-x-2 group-hover:scale-110"
+              />
+            </>
+          )}
         </Link>
       </div>
     </article>

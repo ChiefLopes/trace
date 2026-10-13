@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -39,6 +40,7 @@ function RailCaseCard({
   progress: DashboardSummary;
   resumeHref: Route | null;
 }) {
+  const [isNavigating, setIsNavigating] = useState(false);
   const { activeCase, objectives, evidenceCount, academy } = progress;
   const percent = objectives.total
     ? Math.round((objectives.completed / objectives.total) * 100)
@@ -53,10 +55,23 @@ function RailCaseCard({
         </p>
         <Link
           href={"/cases" as Route}
-          className="flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110 active:scale-[0.98] active:brightness-120"
+          onClick={() => setIsNavigating(true)}
+          className={cn(
+            "flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110 active:scale-[0.98] active:brightness-120",
+            isNavigating && "pointer-events-none cursor-wait opacity-85",
+          )}
         >
-          Browse cases
-          <ArrowRight className="size-3.5" strokeWidth={2.5} />
+          {isNavigating ? (
+            <>
+              <Loader2 className="size-3.5 animate-spin" />
+              <span>Loading…</span>
+            </>
+          ) : (
+            <>
+              <span>Browse cases</span>
+              <ArrowRight className="size-3.5" strokeWidth={2.5} />
+            </>
+          )}
         </Link>
       </div>
     );
@@ -106,10 +121,23 @@ function RailCaseCard({
 
       <Link
         href={resumeHref}
-        className="flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110 active:scale-[0.98] active:brightness-120"
+        onClick={() => setIsNavigating(true)}
+        className={cn(
+          "flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110 active:scale-[0.98] active:brightness-120",
+          isNavigating && "pointer-events-none cursor-wait opacity-85",
+        )}
       >
-        Resume case
-        <ArrowRight className="size-3.5" strokeWidth={2.5} />
+        {isNavigating ? (
+          <>
+            <Loader2 className="size-3.5 animate-spin" />
+            <span>Loading…</span>
+          </>
+        ) : (
+          <>
+            <span>Resume case</span>
+            <ArrowRight className="size-3.5" strokeWidth={2.5} />
+          </>
+        )}
       </Link>
     </section>
   );

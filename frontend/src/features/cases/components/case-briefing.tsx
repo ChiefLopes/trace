@@ -12,6 +12,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { Loader2 } from "lucide-react";
+
 import { renderHighlights } from "@/lib/text/highlight";
 import { cn } from "@/lib/utils/cn";
 
@@ -170,6 +172,7 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
   const [objectivesHeadingVisible, setObjectivesHeadingVisible] = useState(false);
   const [objIndex, setObjIndex] = useState(0);
   const [objCharIndex, setObjCharIndex] = useState(0);
+  const [isProceeding, setIsProceeding] = useState(false);
 
   const parsedBrief = useMemo(() => caseBrief.brief.map(parseParagraph), [caseBrief.brief]);
 
@@ -403,6 +406,7 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
         <div className="pt-2 [grid-area:proceed] lg:pt-0">
           <Link
             href={proceedHref}
+            onClick={() => setIsProceeding(true)}
             className={cn(
               "group relative flex h-[48px] w-full max-w-[240px] items-center justify-center gap-2.5 overflow-hidden rounded-xl px-6 font-display text-sm font-black tracking-wide text-[#020512] uppercase transition-all duration-300 ease-out sm:h-[50px] sm:max-w-[260px] sm:text-[15px]",
               "bg-linear-to-r from-accent via-[#ffbe4d] to-accent",
@@ -410,20 +414,30 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
               isComplete
                 ? "translate-y-0 opacity-100 shadow-[0_0_25px_rgba(252,163,17,0.45)] hover:shadow-[0_0_35px_rgba(252,163,17,0.75),0_6px_18px_rgba(0,0,0,0.4)]"
                 : "pointer-events-none translate-y-3 opacity-0",
+              isProceeding && "pointer-events-none cursor-wait opacity-85",
             )}
           >
             <span
               aria-hidden
               className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
             />
-            <span className="relative z-10">Proceed</span>
-            <Image
-              src="/icons/arrow-line.svg"
-              alt=""
-              width={20}
-              height={20}
-              className="relative z-10 size-4 -scale-y-100 -rotate-90 transition-transform duration-200 ease-out group-hover:translate-x-1.5 group-hover:scale-105 sm:size-4.5"
-            />
+            {isProceeding ? (
+              <span className="relative z-10 flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" />
+                <span>Loading…</span>
+              </span>
+            ) : (
+              <>
+                <span className="relative z-10">Proceed</span>
+                <Image
+                  src="/icons/arrow-line.svg"
+                  alt=""
+                  width={20}
+                  height={20}
+                  className="relative z-10 size-4 -scale-y-100 -rotate-90 transition-transform duration-200 ease-out group-hover:translate-x-1.5 group-hover:scale-105 sm:size-4.5"
+                />
+              </>
+            )}
           </Link>
         </div>
       </div>
