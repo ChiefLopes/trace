@@ -21,11 +21,11 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://accounts.google.com",
   "object-src 'none'",
   "base-uri 'self'",
-  // OAuth providers will need adding here once social sign-in redirects for real.
-  "form-action 'self'",
+  // OAuth providers for social sign-in redirects.
+  "form-action 'self' https://accounts.google.com",
   "frame-ancestors 'none'",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
@@ -49,6 +49,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
   turbopack: {
     rules: {
       "*.css": {

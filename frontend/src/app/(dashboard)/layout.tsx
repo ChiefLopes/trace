@@ -34,9 +34,18 @@ function UserMenuPlaceholder() {
   );
 }
 
-export default async function DashboardLayout({ children }: LayoutProps<"/">) {
+/** The signed-in player's sidebar card. Streamed so the layout shell isn't held up. */
+async function Sidebar() {
   const progress = await getDashboardSummary();
+  return (
+    <DashboardSidebar
+      progress={progress}
+      resumeHref={progress.activeCase ? caseRoutes.workspace(progress.activeCase.id) : null}
+    />
+  );
+}
 
+export default function DashboardLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="design-canvas relative isolate flex min-h-svh flex-1 flex-col overflow-clip">
       <GameBackdrop />
@@ -83,10 +92,9 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
       {/* Bottom space lives on <main>, not here: the sticky rail can't move
           past this row's content box, so padding here would cut its travel. */}
       <div className="flex flex-1 flex-col gap-6 px-4 pt-5 lg:flex-row lg:gap-8 lg:pt-4 lg:pr-0 lg:pl-4">
-        <DashboardSidebar
-          progress={progress}
-          resumeHref={progress.activeCase ? caseRoutes.workspace(progress.activeCase.id) : null}
-        />
+        <Suspense fallback={<DashboardSidebar />}>
+          <Sidebar />
+        </Suspense>
         <DashboardTabs />
         <main className="min-w-0 flex-1 pb-12 lg:relative lg:pb-16">{children}</main>
       </div>

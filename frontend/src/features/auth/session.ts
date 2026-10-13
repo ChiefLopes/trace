@@ -88,3 +88,21 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
     throw error;
   }
 });
+
+/**
+ * Returns the currently signed-in player if a valid session exists, or null.
+ * Does not redirect. Memoised per request.
+ */
+export const getOptionalCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    const session = await verifySessionToken(token);
+    if (!session) return null;
+    const user = await serverApi.get("/api/me", currentUserResponseSchema);
+    if (user.id !== session.sub) return null;
+    return user;
+  } catch {
+    return null;
+  }
+});

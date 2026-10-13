@@ -7,7 +7,12 @@ import { redirect } from "next/navigation";
 import { ApiError } from "@/lib/api/errors";
 import { setFlash } from "@/features/flash/server";
 
-import { login as loginApi, signup as signupApi, logout as logoutApi } from "./server-api";
+import {
+  login as loginApi,
+  signup as signupApi,
+  logout as logoutApi,
+  getGoogleAuthUrl as getGoogleAuthUrlApi,
+} from "./server-api";
 import { clearFailures, recordFailure, retryAfterMinutes } from "./rate-limit";
 import { AFTER_LOGIN, LOGIN_PAGE, safeRedirectPath } from "./routes";
 import { loginSchema, signupSchema } from "./schemas";
@@ -98,4 +103,15 @@ export async function logoutAction() {
   await deleteSession();
   await setFlash("signed-out");
   redirect(LOGIN_PAGE);
+}
+
+/** Retrieve the Google OAuth2 consent authorization URL from the backend. */
+export async function getGoogleAuthUrlAction(): Promise<{ url: string } | { error: string }> {
+  try {
+    const res = await getGoogleAuthUrlApi();
+    return { url: res.url };
+  } catch (error) {
+    if (error instanceof ApiError) return { error: error.message };
+    return { error: "Google sign-in is temporarily unavailable. Please try again." };
+  }
 }

@@ -3,10 +3,10 @@ import { siteConfig } from "@/config/site";
 import { TraceLoader } from "./trace-loader";
 
 /**
- * Hides the splash once the window has loaded. Inlined in <head> so it runs
+ * Hides the splash once the DOM is ready. Inlined in <head> so it runs
  * before React: the splash is plain server HTML and must not wait for hydration.
  */
-export const bootSplashScript = `(function(){var r=document.documentElement;function d(){r.classList.add("boot-done")}if(document.readyState==="complete")d();else addEventListener("load",d)})()`;
+export const bootSplashScript = `(function(){var r=document.documentElement;function d(){r.classList.add("boot-done")}if(document.readyState!=="loading"){d()}else{addEventListener("DOMContentLoaded",d)}})()`;
 
 /**
  * Full-screen TRACE loader shown on every full page load (landing, auth and

@@ -87,6 +87,32 @@ type TransactionDetailProps = {
   caseId: string;
 };
 
+// When tracing has reached Wallet C and D, the button changes to "Keep Tracing" for better UX.
+export function getTraceButtonLabel(from: Wallet, to: Wallet, transaction?: Transaction): string {
+  const isWalletCorD = (id?: string, label?: string) => {
+    if (!id && !label) return false;
+    const lowerId = (id ?? "").toLowerCase();
+    const lowerLabel = (label ?? "").toLowerCase();
+    return (
+      lowerId === "wallet-c" ||
+      lowerId === "wallet-d" ||
+      lowerId === "exchange" ||
+      lowerLabel.includes("wallet c") ||
+      lowerLabel.includes("wallet d") ||
+      lowerLabel.includes("staging wallet d")
+    );
+  };
+
+  const hasReachedCorD =
+    isWalletCorD(to.id, to.label) ||
+    isWalletCorD(from.id, from.label) ||
+    (transaction && isWalletCorD(transaction.toWalletId)) ||
+    (transaction && isWalletCorD(transaction.fromWalletId)) ||
+    Boolean(transaction?.progress && transaction.progress.completed >= 2);
+
+  return hasReachedCorD ? "Keep Tracing" : "Trace the Funds";
+}
+
 export function TransactionDetail({
   transaction,
   from,
@@ -96,6 +122,7 @@ export function TransactionDetail({
   caseId,
 }: TransactionDetailProps) {
   const amount = formatSol(transaction.amountLamports);
+  const traceButtonLabel = getTraceButtonLabel(from, to, transaction);
 
   return (
     <article
@@ -181,7 +208,7 @@ export function TransactionDetail({
           href={traceHref}
           className="flex h-9 items-center gap-2 rounded-lg border border-accent/70 bg-[#0d1640] px-4 text-xs font-semibold text-accent transition-colors hover:border-accent"
         >
-          Trace the Funds
+          {traceButtonLabel}
           <ArrowRight className="size-4" />
         </Link>
       </div>

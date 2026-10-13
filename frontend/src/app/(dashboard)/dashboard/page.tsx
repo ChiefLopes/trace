@@ -1,6 +1,8 @@
 import type { Metadata, Route } from "next";
 import Image from "next/image";
+import { Suspense } from "react";
 
+import { TraceLoader } from "@/components/feedback/trace-loader";
 import { caseRoutes } from "@/features/cases/routes";
 import { StatsPanel } from "@/features/dashboard/components/stats-panel";
 import { getDashboardSummary } from "@/features/dashboard/data";
@@ -19,12 +21,11 @@ export const metadata: Metadata = {
  * Figma: Desktop - 4. offsets are relative to <main> (Figma x=396, y=153);
  * offsets below land each block on its Figma position.
  */
-export default async function DashboardPage() {
+async function DashboardContent() {
   const [summary, selectedInvestigator] = await Promise.all([
     getDashboardSummary(),
     getSelectedInvestigator(),
   ]);
-  const tracy = featuredInvestigator.fullBody;
 
   return (
     <>
@@ -54,6 +55,18 @@ export default async function DashboardPage() {
           selectedId={selectedInvestigator.id}
         />
       </div>
+    </>
+  );
+}
+
+export default function DashboardPage() {
+  const tracy = featuredInvestigator.fullBody;
+
+  return (
+    <>
+      <Suspense fallback={<TraceLoader label="Loading dashboard" />}>
+        <DashboardContent />
+      </Suspense>
 
       {/* Tracy, positioned on the canvas: 785×958 box at x=1113, y=436 with Figma's crop. */}
       <div className="pointer-events-none absolute top-[283px] left-[717px] hidden h-[958px] w-[785px] overflow-hidden select-none lg:block">

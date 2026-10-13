@@ -143,6 +143,7 @@ type WalletDetailProps = {
   caseId: string;
   isFinalDestination?: boolean;
   evidenceCount?: number;
+  canVerifyTrace?: boolean;
 };
 
 export function WalletDetail({
@@ -153,7 +154,13 @@ export function WalletDetail({
   caseId,
   isFinalDestination = false,
   evidenceCount = 0,
+  canVerifyTrace,
 }: WalletDetailProps) {
+  // The Verify Trace button only appears at the last page (final cash-out destination)
+  // OR when the user has added up to the needed amount of evidence / objectives.
+  const shouldShowVerifyTrace =
+    canVerifyTrace !== undefined ? canVerifyTrace : isFinalDestination || evidenceCount >= 2;
+
   return (
     <article
       aria-labelledby="wallet-label"
@@ -175,14 +182,16 @@ export function WalletDetail({
           <p className="mt-2.5 text-xs text-foreground/85">{wallet.description}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <VerifyTraceButton
-            caseId={caseId}
-            walletId={wallet.id}
-            walletLabel={wallet.label}
-            isFinalDestination={isFinalDestination}
-            evidenceCount={evidenceCount}
-            className="h-[33px] text-[11px]"
-          />
+          {shouldShowVerifyTrace && (
+            <VerifyTraceButton
+              caseId={caseId}
+              walletId={wallet.id}
+              walletLabel={wallet.label}
+              isFinalDestination={isFinalDestination}
+              evidenceCount={evidenceCount}
+              className="h-[33px] text-[11px]"
+            />
+          )}
           <AddToEvidenceLink
             caseId={caseId}
             kind="wallet"
@@ -265,13 +274,15 @@ export function WalletDetail({
       </section>
 
       <div className="mt-8 flex flex-wrap items-center gap-2.5">
-        <VerifyTraceButton
-          caseId={caseId}
-          walletId={wallet.id}
-          walletLabel={wallet.label}
-          isFinalDestination={isFinalDestination}
-          evidenceCount={evidenceCount}
-        />
+        {shouldShowVerifyTrace && (
+          <VerifyTraceButton
+            caseId={caseId}
+            walletId={wallet.id}
+            walletLabel={wallet.label}
+            isFinalDestination={isFinalDestination}
+            evidenceCount={evidenceCount}
+          />
+        )}
         <AddToEvidenceLink
           caseId={caseId}
           kind="wallet"

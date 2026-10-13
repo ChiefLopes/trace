@@ -71,18 +71,52 @@
   }
 
   /*
-   * TraceLoader (components/feedback/trace-loader.tsx). One 3.2s loop: the lens
-   * travels 0–80% and reaches wallet i at i × 20%; the trail draws in step;
-   * everything fades at the end. Wallet ping/ripple use the same loop with a
-   * delay of their arrival time. Ripple animates the standalone `scale`
-   * property so it doesn't clobber Tailwind's `translate-*` on the same element.
+   * TraceLoader (components/feedback/trace-loader.tsx). Faster, energetic 1.5s loop:
+   * the lens sweeps smoothly across the trail; wallets ripple and ping in rapid sequence;
+   * ticker cycles briskly every 0.9s per line.
    */
-  --animate-trace-packet: trace-packet 3.2s linear infinite;
-  --animate-trace-draw: trace-draw 3.2s linear infinite;
-  --animate-trace-ping: trace-ping 3.2s ease-out infinite;
-  --animate-trace-ripple: trace-ripple 3.2s ease-out infinite;
-  --animate-trace-counter: trace-counter 3.2s linear infinite;
-  --animate-trace-ticker: trace-ticker 8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  --animate-trace-packet: trace-packet 1.5s linear infinite;
+  --animate-trace-draw: trace-draw 1.5s linear infinite;
+  --animate-trace-ping: trace-ping 1.5s ease-out infinite;
+  --animate-trace-ripple: trace-ripple 1.5s ease-out infinite;
+  --animate-trace-counter: trace-counter 1.5s linear infinite;
+  --animate-trace-ticker: trace-ticker 3.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  --animate-trace-radar: trace-radar 2.5s linear infinite;
+  --animate-trace-pulse: trace-pulse 1.5s ease-in-out infinite;
+  --animate-scanline: scanline 1.6s ease-in-out infinite;
+
+  @keyframes scanline {
+    0%,
+    100% {
+      top: 5%;
+      opacity: 0.4;
+    }
+    50% {
+      top: 85%;
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes trace-radar {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes trace-pulse {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(0.98);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
+  }
 
   @keyframes trace-packet {
     0% {
@@ -170,7 +204,7 @@
     }
   }
 
-  /* Four 20px lines; each shows for ~2s. */
+  /* Four 20px lines; each shows for ~0.9s. */
   @keyframes trace-ticker {
     0%,
     20% {
@@ -227,9 +261,9 @@
 @layer components {
   .boot-splash {
     transition:
-      opacity 0.45s ease,
-      visibility 0.45s;
-    animation: boot-splash-failsafe 0.45s 8s forwards;
+      opacity 0.25s ease,
+      visibility 0.25s;
+    animation: boot-splash-failsafe 0.25s 1s forwards;
   }
 
   :root.boot-done .boot-splash {
@@ -332,14 +366,21 @@
 
 /* Universal button active tactile click effect */
 button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]) {
+[role="button"]:not([aria-disabled="true"]),
+a[class*="rounded-full"]:not([aria-disabled="true"]),
+a[class*="rounded-[32px]"]:not([aria-disabled="true"]),
+a[class*="rounded-[16px]"]:not([aria-disabled="true"]) {
   transition:
-    transform 0.1s cubic-bezier(0.2, 0, 0, 1),
-    filter 0.1s ease;
+    transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 button:not(:disabled):active,
-[role="button"]:not([aria-disabled="true"]):active {
+[role="button"]:not([aria-disabled="true"]):active,
+a[class*="rounded-full"]:not([aria-disabled="true"]):active,
+a[class*="rounded-[32px]"]:not([aria-disabled="true"]):active,
+a[class*="rounded-[16px]"]:not([aria-disabled="true"]):active {
   transform: scale(0.96) !important;
   filter: brightness(0.92) contrast(1.05) !important;
 }

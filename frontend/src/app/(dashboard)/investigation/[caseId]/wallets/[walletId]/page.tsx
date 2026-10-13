@@ -46,6 +46,13 @@ async function WalletContent({ params }: Pick<Props, "params">) {
     (wallet.sentToWalletId === null && wallet.receivedFromWalletId !== null) ||
     (workspace.trail.length > 0 && workspace.trail[workspace.trail.length - 1]?.id === wallet.id);
 
+  // The Verify Trace button should only appear:
+  // - At the last page (Exchange Deposit Hot Wallet) when user has traced to that point
+  // - OR when the user has added up to the needed amount of evidence (>= 2) or completed objectives (>= 2)
+  const completedObjectivesCount = workspace.objectives.filter((o) => o.done).length;
+  const canVerifyTrace =
+    isFinalDestination || evidence.length >= 2 || completedObjectivesCount >= 2;
+
   return (
     <div className="relative max-w-[1022px] lg:ml-[31px]">
       <Link
@@ -76,6 +83,7 @@ async function WalletContent({ params }: Pick<Props, "params">) {
           caseId={caseId}
           isFinalDestination={isFinalDestination}
           evidenceCount={evidence.length}
+          canVerifyTrace={canVerifyTrace}
         />
       </div>
     </div>

@@ -16,7 +16,7 @@ const inter = Inter({
 const roboto = Roboto({
   variable: "--font-roboto-src",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700"],
 });
 
 // Monospace accents: labels, timestamps and wallet addresses.

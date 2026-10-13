@@ -177,19 +177,29 @@ export function EvidenceForm({
         <button
           type="submit"
           disabled={pending}
-          className="flex h-[45px] items-center justify-center gap-2 rounded-xl bg-accent font-display text-[12px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_8px_20px_-8px_var(--accent)] transition-[filter] hover:brightness-110 disabled:opacity-70"
+          className="group relative flex h-[45px] items-center justify-center gap-2 overflow-hidden rounded-xl bg-linear-to-r from-accent via-[#ffbe4d] to-accent font-display text-[12px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_6px_22px_-6px_var(--accent)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-[0_8px_30px_rgba(252,163,17,0.75)] hover:brightness-105 active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-70"
         >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+          />
           {pending ? (
-            <>
+            <span className="relative z-10 flex items-center gap-2">
               <Loader2 className="size-4 animate-spin" />
-              Verifying Trace…
-            </>
+              <span>Verifying Trace…</span>
+            </span>
           ) : (
-            <>
-              <ShieldCheck className="size-4" strokeWidth={2.5} />
-              Verify Trace
-              <ArrowRight className="size-4" strokeWidth={2.25} />
-            </>
+            <span className="relative z-10 flex items-center gap-2">
+              <ShieldCheck
+                className="size-4 transition-transform duration-200 group-hover:scale-120 group-hover:rotate-6"
+                strokeWidth={2.5}
+              />
+              <span>Verify Trace</span>
+              <ArrowRight
+                className="size-4 transition-transform duration-200 group-hover:translate-x-1.5"
+                strokeWidth={2.25}
+              />
+            </span>
           )}
         </button>
       </form>

@@ -41,7 +41,7 @@ export function UserMenu({ displayName, avatar }: UserMenuProps) {
         // Figma header chip: 202×50, 6.9px padding, 1px white/10 outline (measured from the render).
         className={cn(
           "flex h-[50.2px] w-[202px] items-center justify-end gap-[5.5px] rounded-[7.56px] border border-white/10 p-[6.87px]",
-          "bg-linear-to-r from-black/10 to-[rgb(12_55_151/0.1)] transition-colors hover:bg-white/5",
+          "bg-linear-to-r from-black/10 to-[rgb(12_55_151/0.1)] transition-colors hover:bg-white/5 active:scale-[0.98]",
         )}
       >
         <span className="font-display text-[11.69px] leading-[17.53px] font-bold tracking-[0.29px] whitespace-nowrap text-accent uppercase">

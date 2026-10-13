@@ -27,17 +27,17 @@ async function CaseFileContent({ params }: Pick<Props, "params">) {
   if (!caseFile) notFound();
 
   return (
-    // Card at canvas x=450, y=163; the figure and floor shadows are placed against it.
+    // Card at canvas x=450, y=163; the figure and floor shadows stand beside it with comfortable breathing room from the text.
     <div className="relative lg:mt-[10px] lg:ml-[54px] lg:w-[775px]">
       <CaseFile caseFile={caseFile} beginHref={caseRoutes.workspace(caseId)} />
       <InvestigatorStanding
         investigator={investigator}
         sizes="384px"
-        className="absolute top-[32.6px] left-[622px] hidden h-[915.2px] w-[383.7px] lg:block"
+        className="absolute top-[32.6px] left-[800px] hidden h-[915.2px] w-[383.7px] lg:block"
       />
       {[
-        { top: 704.5, left: 663.7 },
-        { top: 726.5, left: 767.6 },
+        { top: 704.5, left: 841.7 },
+        { top: 726.5, left: 945.6 },
       ].map(({ top, left }) => (
         <Image
           key={left}

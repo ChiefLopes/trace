@@ -92,20 +92,27 @@ export function VerifyTraceButton({
         disabled={isVerifying}
         aria-label="Verify trace"
         className={cn(
-          "inline-flex h-[33px] items-center justify-center gap-1.5 rounded-xl bg-accent px-4 font-display text-[11px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_0_18px_-3px_var(--accent)] transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-70",
+          "group relative inline-flex h-[33px] items-center justify-center gap-1.5 overflow-hidden rounded-xl bg-linear-to-r from-accent via-[#ffbe4d] to-accent px-4 font-display text-[11px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_0_20px_-3px_var(--accent)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(252,163,17,0.75)] hover:brightness-105 active:translate-y-0 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-70",
           className,
         )}
       >
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+        />
         {isVerifying ? (
-          <>
+          <span className="relative z-10 flex items-center gap-1.5">
             <Loader2 className="size-3.5 animate-spin" />
             Verifying…
-          </>
+          </span>
         ) : (
-          <>
-            <ShieldCheck className="size-3.5" strokeWidth={2.5} />
+          <span className="relative z-10 flex items-center gap-1.5">
+            <ShieldCheck
+              className="size-3.5 transition-transform duration-200 group-hover:scale-120 group-hover:rotate-6"
+              strokeWidth={2.5}
+            />
             Verify Trace
-          </>
+          </span>
         )}
       </button>
 

@@ -279,34 +279,21 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
       onClick={isComplete ? undefined : handleSkip}
       className="relative cursor-default lg:pt-[72px] lg:pl-[56px]"
     >
-      {/* Classified Transmission HUD Bar */}
-      <div className="mb-4 flex max-w-[850px] items-center justify-between">
-        <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] text-accent uppercase">
-          <span
-            className={cn(
-              "size-2 rounded-full",
-              isComplete
-                ? "bg-emerald-400 shadow-[0_0_8px_rgb(52,211,153)]"
-                : "animate-ping bg-accent shadow-[0_0_8px_var(--accent)]",
-            )}
-          />
-          <span>
-            {isComplete ? "INTEL TRANSMISSION CONFIRMED // READY" : "DECRYPTING CASE DOSSIER..."}
-          </span>
-        </div>
-        {!isComplete && (
+      {/* Skip button while typing */}
+      {!isComplete && (
+        <div className="mb-4 flex max-w-[850px] justify-end">
           <button
             type="button"
             onClick={handleSkip}
-            className="group flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] tracking-widest text-[#9aa3bd] uppercase transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
+            className="group flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] tracking-widest text-[#9aa3bd] uppercase transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent active:scale-95 active:brightness-110"
           >
             <span>[ SKIP</span>
             <span className="text-accent transition-transform group-hover:translate-x-0.5">
               ❯❯ ]
             </span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <header className="font-display text-[28px] leading-[1.62] font-black uppercase lg:text-[40px]">
         <p className="min-h-[1.62em] text-accent">
@@ -333,8 +320,8 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
         </h1>
       </header>
 
-      <div className="mt-10 flex flex-col gap-12 lg:mt-[56.4px] lg:flex-row lg:gap-[185px]">
-        <section aria-labelledby="case-brief" className="lg:w-[490px]">
+      <div className="mt-8 grid grid-cols-1 gap-8 [grid-template-areas:'brief'_'objectives'_'proceed'] lg:mt-[56.4px] lg:grid-cols-[490px_401px] lg:gap-x-[185px] lg:gap-y-6 lg:[grid-template-areas:'brief_objectives'_'proceed_objectives']">
+        <section aria-labelledby="case-brief" className="[grid-area:brief] lg:w-[490px]">
           <SectionHeading
             id="case-brief"
             underline={127.5}
@@ -342,7 +329,7 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
           >
             Case brief
           </SectionHeading>
-          <div className="mt-5 min-h-[300px] font-roboto text-[17px] leading-[2.03] lg:text-[20px]">
+          <div className="mt-5 min-h-[220px] font-roboto text-[16px] leading-[1.9] sm:text-[17px] sm:leading-[2.03] lg:min-h-[300px] lg:text-[20px]">
             {caseBrief.brief.map((paragraph, i) => {
               if (isComplete) {
                 return <p key={i}>{renderHighlights(paragraph)}</p>;
@@ -365,28 +352,9 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
               );
             })}
           </div>
-
-          <Link
-            href={proceedHref}
-            className={cn(
-              "mt-[45px] flex h-[71px] w-full max-w-[383px] items-center justify-center gap-2.5 rounded-[32px] bg-accent p-2.5 font-display text-[20px] leading-[1.62] font-black text-[#020512] uppercase transition-all duration-700 hover:brightness-110",
-              isComplete
-                ? "translate-y-0 opacity-100 shadow-[0_0_35px_rgba(252,163,17,0.35)]"
-                : "pointer-events-none translate-y-4 opacity-0",
-            )}
-          >
-            Proceed
-            <Image
-              src="/icons/arrow-line.svg"
-              alt=""
-              width={24}
-              height={24}
-              className="size-6 -scale-y-100 -rotate-90"
-            />
-          </Link>
         </section>
 
-        <section aria-labelledby="case-objectives" className="lg:w-[401px]">
+        <section aria-labelledby="case-objectives" className="[grid-area:objectives] lg:w-[401px]">
           <SectionHeading
             id="case-objectives"
             underline={226}
@@ -431,6 +399,33 @@ export function CaseBriefing({ caseBrief, proceedHref }: CaseBriefingProps) {
             })}
           </ol>
         </section>
+
+        <div className="pt-2 [grid-area:proceed] lg:pt-0">
+          <Link
+            href={proceedHref}
+            className={cn(
+              "group relative flex h-[48px] w-full max-w-[240px] items-center justify-center gap-2.5 overflow-hidden rounded-xl px-6 font-display text-sm font-black tracking-wide text-[#020512] uppercase transition-all duration-300 ease-out sm:h-[50px] sm:max-w-[260px] sm:text-[15px]",
+              "bg-linear-to-r from-accent via-[#ffbe4d] to-accent",
+              "hover:-translate-y-0.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.98]",
+              isComplete
+                ? "translate-y-0 opacity-100 shadow-[0_0_25px_rgba(252,163,17,0.45)] hover:shadow-[0_0_35px_rgba(252,163,17,0.75),0_6px_18px_rgba(0,0,0,0.4)]"
+                : "pointer-events-none translate-y-3 opacity-0",
+            )}
+          >
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+            />
+            <span className="relative z-10">Proceed</span>
+            <Image
+              src="/icons/arrow-line.svg"
+              alt=""
+              width={20}
+              height={20}
+              className="relative z-10 size-4 -scale-y-100 -rotate-90 transition-transform duration-200 ease-out group-hover:translate-x-1.5 group-hover:scale-105 sm:size-4.5"
+            />
+          </Link>
+        </div>
       </div>
     </article>
   );

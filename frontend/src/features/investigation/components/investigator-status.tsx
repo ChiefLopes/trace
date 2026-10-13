@@ -34,7 +34,7 @@ export function InvestigatorStatus({ rank, state, hint, title }: InvestigatorSta
         aria-expanded={showHint}
         aria-controls={hintId}
         onClick={() => setShowHint((v) => !v)}
-        className="flex w-full items-center justify-center gap-2 rounded-[12px] border border-accent/50 bg-linear-to-b from-accent/15 to-[rgb(0_6_20/0.4)] px-[17px] py-[11px] text-[14px] leading-5 font-bold text-accent shadow-[0_0_15px_rgb(252_163_17/0.15)] transition-colors hover:border-accent"
+        className="flex w-full items-center justify-center gap-2 rounded-[12px] border border-accent/50 bg-linear-to-b from-accent/15 to-[rgb(0_6_20/0.4)] px-[17px] py-[11px] text-[14px] leading-5 font-bold text-accent shadow-[0_0_15px_rgb(252_163_17/0.15)] transition-colors hover:border-accent active:scale-[0.98] active:brightness-110"
       >
         <Lightbulb className="size-4 fill-current" />
         {showHint ? "Hide hint" : "Need a hint?"}

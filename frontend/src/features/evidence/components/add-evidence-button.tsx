@@ -134,13 +134,20 @@ export function AddEvidenceButton({
         type="button"
         onClick={() => setIsOpen(true)}
         className={cn(
-          "flex h-9 items-center gap-2 rounded-lg bg-accent px-4 text-xs font-semibold text-accent-foreground",
-          "shadow-[0_6px_18px_-6px_var(--accent)] transition-[filter] hover:brightness-110",
+          "group relative inline-flex h-9 items-center gap-2 overflow-hidden rounded-lg bg-linear-to-r from-accent via-[#ffbe4d] to-accent px-4 text-xs font-semibold text-accent-foreground",
+          "shadow-[0_4px_16px_-4px_var(--accent)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-[0_6px_24px_rgba(252,163,17,0.7)] hover:brightness-105 active:translate-y-0 active:scale-[0.97]",
           className,
         )}
       >
-        <Plus className="size-4" strokeWidth={2.5} />
-        Add to Evidence
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+        />
+        <Plus
+          className="relative z-10 size-4 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-90"
+          strokeWidth={2.5}
+        />
+        <span className="relative z-10">Add to Evidence</span>
       </button>
 
       {isOpen && (
@@ -172,7 +179,7 @@ export function AddEvidenceButton({
                 type="button"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close dialog"
-                className="grid size-8 place-items-center rounded-lg border border-white/10 bg-white/5 text-[#9aa3bd] transition-colors hover:bg-white/10 hover:text-white"
+                className="grid size-8 place-items-center rounded-lg border border-white/10 bg-white/5 text-[#9aa3bd] transition-colors hover:bg-white/10 hover:text-white active:scale-95 active:brightness-110"
               >
                 <X className="size-4" />
               </button>
@@ -225,7 +232,7 @@ export function AddEvidenceButton({
                               disabled={deletingId === (item.id ?? item.targetId)}
                               onClick={() => handleRemove(item)}
                               aria-label={`Remove ${item.label}`}
-                              className="text-[#8f98b3] transition-colors hover:text-destructive disabled:opacity-50"
+                              className="text-[#8f98b3] transition-colors hover:text-destructive active:scale-95 active:text-destructive disabled:opacity-50"
                             >
                               <Trash2 className="size-3.5" />
                             </button>
@@ -269,18 +276,25 @@ export function AddEvidenceButton({
                 type="submit"
                 form="add-evidence-form"
                 disabled={isSubmitting}
-                className="flex h-[45px] w-full items-center justify-center gap-2 rounded-xl bg-accent font-display text-[11px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_8px_20px_-8px_var(--accent)] transition-[filter] hover:brightness-110 disabled:opacity-70"
+                className="group relative flex h-[45px] w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-linear-to-r from-accent via-[#ffbe4d] to-accent font-display text-[11px] font-black tracking-wide text-accent-foreground uppercase shadow-[0_6px_22px_-6px_var(--accent)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-[0_8px_30px_rgba(252,163,17,0.75)] hover:brightness-105 active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-70"
               >
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+                />
                 {isSubmitting ? (
-                  <>
+                  <span className="relative z-10 flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
                     <span>Saving Evidence…</span>
-                  </>
+                  </span>
                 ) : (
-                  <>
+                  <span className="relative z-10 flex items-center gap-2">
                     <span>Submit Evidence</span>
-                    <ArrowRight className="size-4" strokeWidth={2.25} />
-                  </>
+                    <ArrowRight
+                      className="size-4 transition-transform duration-200 group-hover:translate-x-1.5"
+                      strokeWidth={2.25}
+                    />
+                  </span>
                 )}
               </button>
             </footer>

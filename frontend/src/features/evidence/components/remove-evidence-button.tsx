@@ -28,9 +28,10 @@ export function RemoveEvidenceButton({
       <button
         type="submit"
         disabled={pending}
-        className="flex items-center gap-1 text-xs text-[#aab3c8] hover:text-destructive disabled:opacity-60"
+        className="group flex items-center gap-1.5 text-xs text-[#aab3c8] transition-colors hover:text-destructive active:scale-95 active:text-destructive disabled:opacity-60"
       >
-        <Trash2 className="size-3.5" /> {pending ? "Removing…" : "Remove"}
+        <Trash2 className="size-3.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-12" />{" "}
+        {pending ? "Removing…" : "Remove"}
       </button>
       {state.status === "error" && (
         <p role="alert" className="mt-1 max-w-48 text-xs text-destructive">

@@ -34,8 +34,8 @@ async function OutcomeContent({ params }: Pick<Props, "params">) {
 
   return (
     <>
-      {/* 78px inside <main>, as in Figma. */}
-      <div className="lg:ml-[78px]">
+      {/* Centered on mobile/tablet, 78px inside <main> on desktop */}
+      <div className="flex w-full justify-center lg:ml-[78px] lg:block">
         <CaseSolved
           outcome={outcome}
           portrait={{ ...art, alt: investigator.description }}

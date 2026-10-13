@@ -4,8 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LoginForm } from "./login-form";
 
-const { loginAction, replace } = vi.hoisted(() => ({ loginAction: vi.fn(), replace: vi.fn() }));
-vi.mock("../actions", () => ({ loginAction }));
+const { loginAction, getGoogleAuthUrlAction, replace } = vi.hoisted(() => ({
+  loginAction: vi.fn(),
+  getGoogleAuthUrlAction: vi.fn(),
+  replace: vi.fn(),
+}));
+vi.mock("../actions", () => ({ loginAction, getGoogleAuthUrlAction }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 
 describe("LoginForm", () => {

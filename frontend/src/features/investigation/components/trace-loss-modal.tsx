@@ -108,9 +108,9 @@ export function TraceLossModal({
             <Link
               href={`/investigation/${caseId}`}
               onClick={() => dialogRef.current?.close()}
-              className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-display text-[12px] font-bold tracking-wider text-white uppercase transition-colors hover:bg-white/10 sm:w-auto"
+              className="group flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center font-display text-[12px] font-bold tracking-wider text-white uppercase transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] active:translate-y-0 active:scale-[0.97] sm:w-auto"
             >
-              <ArrowLeft className="size-4" />
+              <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-1" />
               Workspace
             </Link>
           )}
@@ -119,10 +119,17 @@ export function TraceLossModal({
             type="button"
             onClick={handleRetry}
             autoFocus
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-red-600 to-amber-600 px-6 py-3.5 font-display text-[13px] font-black tracking-wider text-white uppercase shadow-[0_0_20px_-3px_rgb(239_68_68/0.5)] transition-[filter,transform] hover:brightness-110 active:scale-[0.98]"
+            className="group relative flex flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-linear-to-r from-red-600 via-rose-500 to-amber-600 px-6 py-3.5 font-display text-[13px] font-black tracking-wider text-white uppercase shadow-[0_0_22px_-2px_rgb(239_68_68/0.5)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-[0_0_32px_rgb(239_68_68/0.75)] hover:brightness-105 active:translate-y-0 active:scale-[0.97]"
           >
-            <RotateCcw className="size-4" strokeWidth={2.5} />
-            Retry Trace
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+            />
+            <RotateCcw
+              className="relative z-10 size-4 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-90"
+              strokeWidth={2.5}
+            />
+            <span className="relative z-10">Retry Trace</span>
           </button>
         </div>
       </div>

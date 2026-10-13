@@ -1,17 +1,21 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
+import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { UserMenu } from "@/components/layout/user-menu";
 import { buttonVariants } from "@/components/ui/button";
 import { authNav, mainNav } from "@/config/navigation";
 import { siteConfig } from "@/config/site";
+import { logoutAction } from "@/features/auth/actions";
+import type { CurrentUser } from "@/features/auth/session";
 import { cn } from "@/lib/utils/cn";
 
-export function SiteHeader() {
+export function SiteHeader({ user }: { user?: CurrentUser | null } = {}) {
   const pathname = usePathname();
   // Remember which page the menu was opened on: navigating elsewhere closes it
   // without needing an effect to reset state.
@@ -65,21 +69,30 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="hidden items-center gap-4 md:flex">
-          <Link
-            href={authNav.login.href}
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            {authNav.login.label}
-          </Link>
-          <Link href={authNav.signUp.href} className={buttonVariants({ size: "sm" })}>
-            {authNav.signUp.label}
-          </Link>
-        </div>
+        {user ? (
+          <div className="hidden items-center gap-3 md:flex">
+            <Link href={"/dashboard" as Route} className={buttonVariants({ size: "sm" })}>
+              Dashboard
+            </Link>
+            <UserMenu displayName={user.displayName} avatar={user.avatar} />
+          </div>
+        ) : (
+          <div className="hidden items-center gap-4 md:flex">
+            <Link
+              href={authNav.login.href}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              {authNav.login.label}
+            </Link>
+            <Link href={authNav.signUp.href} className={buttonVariants({ size: "sm" })}>
+              {authNav.signUp.label}
+            </Link>
+          </div>
+        )}
 
         <button
           type="button"
-          className="-mr-2 rounded-md p-2 md:hidden"
+          className="-mr-2 rounded-md p-2 transition-transform active:scale-95 md:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -108,17 +121,50 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-4">
-            <Link
-              href={authNav.login.href}
-              className={buttonVariants({ variant: "ghost", className: "border border-accent/40" })}
-            >
-              {authNav.login.label}
-            </Link>
-            <Link href={authNav.signUp.href} className={buttonVariants()}>
-              {authNav.signUp.label}
-            </Link>
-          </div>
+          {user ? (
+            <div className="mt-3 flex flex-col gap-3 border-t border-border pt-4">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-semibold text-muted">Signed in as</span>
+                <span className="font-display text-xs font-bold text-accent uppercase">
+                  {user.displayName}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href={"/dashboard" as Route}
+                  className={buttonVariants({ className: "w-full" })}
+                >
+                  Dashboard
+                </Link>
+                <form action={logoutAction} className="w-full">
+                  <button
+                    type="submit"
+                    className={buttonVariants({
+                      variant: "ghost",
+                      className: "w-full border border-white/10 text-muted hover:text-foreground",
+                    })}
+                  >
+                    Log out
+                  </button>
+                </form>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-4">
+              <Link
+                href={authNav.login.href}
+                className={buttonVariants({
+                  variant: "ghost",
+                  className: "border border-accent/40",
+                })}
+              >
+                {authNav.login.label}
+              </Link>
+              <Link href={authNav.signUp.href} className={buttonVariants()}>
+                {authNav.signUp.label}
+              </Link>
+            </div>
+          )}
         </nav>
       )}
     </header>

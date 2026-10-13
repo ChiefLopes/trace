@@ -38,6 +38,16 @@ export const FLASH_MESSAGES = {
     title: "Investigator assigned",
     description: "Your case briefing is ready.",
   },
+  "signed-in": {
+    type: "success",
+    title: "Welcome back, Agent",
+    description: "Your case files are unlocked.",
+  },
+  "google-auth-failed": {
+    type: "error",
+    title: "Google authentication failed",
+    description: "Could not complete sign-in. Please try again.",
+  },
 } as const satisfies Record<
   string,
   { type: "success" | "info" | "warning" | "error"; title: string; description?: string }

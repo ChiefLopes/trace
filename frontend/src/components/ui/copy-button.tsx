@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ export function CopyButton({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [copying, setCopying] = useState(false);
 
   useEffect(() => {
     if (!copied) return;
@@ -29,7 +30,9 @@ export function CopyButton({
     <button
       type="button"
       aria-label={copied ? "Copied" : label}
+      disabled={copying}
       onClick={async () => {
+        setCopying(true);
         try {
           await navigator.clipboard.writeText(value);
           setCopied(true);
@@ -37,14 +40,22 @@ export function CopyButton({
         } catch {
           // Clipboard blocked (insecure context or permissions).
           toast.error("Couldn't copy", { description: "Select the text and copy it manually." });
+        } finally {
+          setCopying(false);
         }
       }}
       className={cn(
-        "grid size-6 place-items-center rounded text-[#8f98b3] transition-colors hover:text-foreground",
+        "grid size-6 place-items-center rounded text-[#8f98b3] transition-colors hover:text-foreground active:scale-[0.9] active:brightness-110 disabled:opacity-50",
         className,
       )}
     >
-      {copied ? <Check className="size-3.5 text-accent" /> : <Copy className="size-3.5" />}
+      {copying ? (
+        <Loader2 className="size-3.5 animate-spin" />
+      ) : copied ? (
+        <Check className="size-3.5 text-accent" />
+      ) : (
+        <Copy className="size-3.5" />
+      )}
     </button>
   );
 }

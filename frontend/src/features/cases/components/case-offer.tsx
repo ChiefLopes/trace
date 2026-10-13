@@ -10,7 +10,7 @@ type CaseOfferProps = {
 };
 
 const action =
-  "flex h-[71px] w-full items-center justify-center gap-2.5 rounded-[32px] p-2.5 font-display text-[18px] leading-[1.62] font-black whitespace-nowrap text-[#020512] uppercase transition-[filter] hover:brightness-110 lg:text-[20px]";
+  "group relative overflow-hidden flex h-[71px] w-full items-center justify-center gap-3 rounded-[32px] p-2.5 font-display text-[18px] leading-[1.62] font-black whitespace-nowrap uppercase transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.03] active:translate-y-0 active:scale-[0.97] lg:text-[20px]";
 
 /**
  * "Agent X, will you take this case?" (Figma: Desktop - 6). The block sits at
@@ -25,13 +25,39 @@ export function CaseOffer({ agentName, caseTitle, rejectHref, acceptHref }: Case
       </div>
 
       <div className="mt-10 flex flex-col gap-6 sm:flex-row lg:mt-[76px]">
-        <Link href={rejectHref} className={`${action} bg-white sm:w-[273px]`}>
-          <Image src="/icons/reject.svg" alt="" width={28} height={28} className="size-[28.1px]" />
-          Reject trace
+        <Link
+          href={rejectHref}
+          className={`${action} bg-white text-[#020512] shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:shadow-[0_0_40px_rgba(255,255,255,0.6),0_10px_25px_rgba(0,0,0,0.4)] sm:w-[273px]`}
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-black/10 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+          />
+          <Image
+            src="/icons/reject.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="relative z-10 size-[28.1px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-12"
+          />
+          <span className="relative z-10">Reject trace</span>
         </Link>
-        <Link href={acceptHref} className={`${action} bg-accent sm:w-[335px]`}>
-          <Image src="/icons/play.svg" alt="" width={24} height={24} className="size-6" />
-          Open case file
+        <Link
+          href={acceptHref}
+          className={`${action} bg-linear-to-r from-accent via-[#ffbe4d] to-accent text-[#020512] shadow-[0_0_32px_rgba(252,163,17,0.45)] hover:shadow-[0_0_55px_rgba(252,163,17,0.85),0_10px_25px_rgba(0,0,0,0.5)] sm:w-[335px]`}
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"
+          />
+          <Image
+            src="/icons/play.svg"
+            alt=""
+            width={24}
+            height={24}
+            className="relative z-10 size-6 transition-transform duration-200 group-hover:scale-125 group-hover:rotate-6"
+          />
+          <span className="relative z-10">Open case file</span>
         </Link>
       </div>
     </section>

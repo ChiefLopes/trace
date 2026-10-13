@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -12,13 +13,14 @@ import { Field, fieldErrorId } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 
-import { loginAction } from "../actions";
+import { getGoogleAuthUrlAction, loginAction } from "../actions";
 import { loginSchema } from "../schemas";
 import { FormAlert } from "@/components/ui/form-alert";
-import { oauthProviderName, SocialSignIn } from "./social-sign-in";
+import { type OAuthProvider, oauthProviderName, SocialSignIn } from "./social-sign-in";
 
 export function LoginForm() {
   const router = useRouter();
+  const [isSocialLoading, setIsSocialLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -30,6 +32,36 @@ export function LoginForm() {
     // Validate a field once the user leaves it, then live as they fix it.
     mode: "onTouched",
   });
+
+  const handleSocialContinue = async (provider: OAuthProvider) => {
+    if (provider === "google") {
+      setIsSocialLoading(true);
+      try {
+        const result = await getGoogleAuthUrlAction();
+        if ("error" in result) {
+          toast.error(result.error);
+          setIsSocialLoading(false);
+          return;
+        }
+        if (result.url.includes("GOOGLE_CLIENT_ID_NOT_CONFIGURED")) {
+          toast.info("Google Sign-In is not configured yet", {
+            description:
+              "Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your environment variables.",
+          });
+          setIsSocialLoading(false);
+          return;
+        }
+        window.location.href = result.url;
+      } catch {
+        toast.error("Couldn't reach the server. Please try again.");
+        setIsSocialLoading(false);
+      }
+    } else {
+      toast.info(`${oauthProviderName[provider]} sign-in is coming soon`, {
+        description: "Use email and password sign-in for now.",
+      });
+    }
+  };
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -96,12 +128,8 @@ export function LoginForm() {
 
       <SocialSignIn
         label="Continue with"
-        // TODO: start the OAuth redirect once the backend exposes it.
-        onContinue={(provider) =>
-          toast.info(`${oauthProviderName[provider]} sign-in is coming soon`, {
-            description: "Use email and password sign-in for now.",
-          })
-        }
+        isLoading={isSocialLoading}
+        onContinue={handleSocialContinue}
       />
     </form>
   );

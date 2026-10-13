@@ -110,14 +110,14 @@ export function LeadDialog({ lead, actionHref, delayMs }: LeadDialogProps) {
           <Link
             href={actionHref}
             autoFocus
-            className="flex-1 rounded-[16px] bg-accent px-6 py-3.5 text-center font-display text-[14px] leading-6 font-bold tracking-[0.4px] text-black uppercase shadow-[0_10px_15px_-3px_rgb(147_51_234/0.4),0_4px_6px_-4px_rgb(147_51_234/0.4)] transition-[filter] hover:brightness-110 sm:text-[16px]"
+            className="flex-1 rounded-[16px] bg-accent px-6 py-3.5 text-center font-display text-[14px] leading-6 font-bold tracking-[0.4px] text-black uppercase shadow-[0_10px_15px_-3px_rgb(147_51_234/0.4),0_4px_6px_-4px_rgb(147_51_234/0.4)] transition-[filter] hover:brightness-110 active:scale-[0.98] active:brightness-120 sm:text-[16px]"
           >
             {lead.actionLabel}
           </Link>
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            className="rounded-[16px] px-5 py-3.5 font-display text-[16px] leading-6 font-black uppercase transition-colors hover:text-accent"
+            className="rounded-[16px] px-5 py-3.5 font-display text-[16px] leading-6 font-black uppercase transition-colors hover:text-accent active:scale-[0.98] active:text-accent"
           >
             Later
           </button>

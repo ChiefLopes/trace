@@ -53,7 +53,7 @@ function RailCaseCard({
         </p>
         <Link
           href={"/cases" as Route}
-          className="flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110"
+          className="flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110 active:scale-[0.98] active:brightness-120"
         >
           Browse cases
           <ArrowRight className="size-3.5" strokeWidth={2.5} />
@@ -106,7 +106,7 @@ function RailCaseCard({
 
       <Link
         href={resumeHref}
-        className="flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110"
+        className="flex h-9 items-center justify-center gap-1.5 rounded-[12px] bg-accent font-display text-[12px] font-black text-black uppercase transition-[filter] hover:brightness-110 active:scale-[0.98] active:brightness-120"
       >
         Resume case
         <ArrowRight className="size-3.5" strokeWidth={2.5} />
@@ -115,8 +115,18 @@ function RailCaseCard({
   );
 }
 
+function RailCaseCardSkeleton() {
+  return (
+    <div className="flex animate-pulse flex-col gap-3 rounded-[16px] border border-white/5 bg-[rgb(0_6_20/0.35)] p-3.5">
+      <div className="h-2.5 w-16 rounded bg-white/10" />
+      <div className="h-4 w-28 rounded bg-white/10" />
+      <div className="h-9 w-full rounded-[12px] bg-white/5" />
+    </div>
+  );
+}
+
 /**
- * Vertical game navigation, desktop: a compact rail (248px, 40px rows) pinned
+ * Game rail on the left on desktop. Compact, sticky, starts
  * 16px below the header and sized to the window, so the whole menu is always
  * visible and only the page content scrolls. The active-case card sits at
  * the bottom; the 520px minimum keeps menu and card from overlapping.
@@ -127,10 +137,10 @@ export function DashboardSidebar({
   progress,
   resumeHref,
 }: {
-  progress: DashboardSummary;
+  progress?: DashboardSummary | null;
   /** Workspace of the active case, or null when there is none. */
-  resumeHref: Route | null;
-}) {
+  resumeHref?: Route | null;
+} = {}) {
   const isActive = useIsActive();
 
   return (
@@ -180,10 +190,18 @@ export function DashboardSidebar({
       </nav>
 
       <div className="mt-auto pt-4">
-        <RailCaseCard progress={progress} resumeHref={resumeHref} />
+        {progress ? (
+          <RailCaseCard progress={progress} resumeHref={resumeHref ?? null} />
+        ) : (
+          <RailCaseCardSkeleton />
+        )}
       </div>
     </aside>
   );
+}
+
+export function DashboardSidebarSkeleton() {
+  return <DashboardSidebar />;
 }
 
 /** Horizontal, scrollable version of the same navigation below `lg`. */

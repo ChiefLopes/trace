@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import { defaultInvestigatorId, getInvestigator, type Investigator } from "./data";
 import { getSession } from "@/features/auth/server-api";
@@ -22,30 +23,32 @@ export const selectedInvestigatorCookieOptions = {
 const SHOW_PLAYER_CHOICE = process.env.SHOW_PLAYER_CHOICE !== "false";
 
 /** The player's chosen investigator, or the design default if none is available. */
-export async function getSelectedInvestigator(): Promise<Investigator> {
-  const fallback = getInvestigator(defaultInvestigatorId)!;
-  if (!SHOW_PLAYER_CHOICE) return fallback;
+export const getSelectedInvestigator = cache(
+  async function getSelectedInvestigator(): Promise<Investigator> {
+    const fallback = getInvestigator(defaultInvestigatorId)!;
+    if (!SHOW_PLAYER_CHOICE) return fallback;
 
-  try {
-    const session = await getSession();
-    if (session.user?.selectedInvestigatorId) {
-      const found = getInvestigator(session.user.selectedInvestigatorId);
-      if (found) return found;
+    try {
+      const session = await getSession();
+      if (session.user?.selectedInvestigatorId) {
+        const found = getInvestigator(session.user.selectedInvestigatorId);
+        if (found) return found;
+      }
+    } catch {
+      // Unauthenticated or network error
     }
-  } catch {
-    // Unauthenticated or network error
-  }
 
-  try {
-    const cookieStore = await cookies();
-    const id = cookieStore.get(SELECTED_INVESTIGATOR_COOKIE)?.value;
-    if (id) {
-      const found = getInvestigator(id);
-      if (found) return found;
+    try {
+      const cookieStore = await cookies();
+      const id = cookieStore.get(SELECTED_INVESTIGATOR_COOKIE)?.value;
+      if (id) {
+        const found = getInvestigator(id);
+        if (found) return found;
+      }
+    } catch {
+      // Outside request store
     }
-  } catch {
-    // Outside request store
-  }
 
-  return fallback;
-}
+    return fallback;
+  },
+);

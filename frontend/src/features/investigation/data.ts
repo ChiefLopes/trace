@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { z } from "zod";
 
 import {
@@ -283,8 +284,8 @@ export function isSolved(workspace: Pick<Workspace, "objectives">) {
  */
 export type WorkspacePreview = "solved";
 
-/** Fetch workspace from backend with fallback to mock workspace. */
-export async function getWorkspace(
+/** Fetch workspace from backend with fallback to mock workspace (memoized per request). */
+export const getWorkspace = cache(async function getWorkspace(
   caseId: string,
   preview?: WorkspacePreview,
 ): Promise<Workspace | null> {
@@ -310,7 +311,7 @@ export async function getWorkspace(
     objectives: workspace.objectives.map((o) => ({ ...o, done: true })),
     lead: null,
   };
-}
+});
 
 /** Convert API Workspace to MockWorkspace for components.. */
 function convertToMockWorkspace(apiWorkspace: ApiWorkspace): MockWorkspace {

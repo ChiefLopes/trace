@@ -20,7 +20,7 @@ export default function Error({
       <button
         type="button"
         onClick={() => retry()}
-        className="rounded-md border border-border px-4 py-2 hover:bg-primary"
+        className="rounded-md border border-border px-4 py-2 hover:bg-primary active:scale-[0.98] active:brightness-110"
       >
         Try again
       </button>

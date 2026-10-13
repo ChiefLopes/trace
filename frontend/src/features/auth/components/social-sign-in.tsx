@@ -1,6 +1,4 @@
-"use client";
-
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
 
 import { GoogleLogo } from "@/components/icons/google-logo";
@@ -26,6 +24,8 @@ type SocialSignInProps = {
   label: string;
   /** Called with the chosen provider. */
   onContinue: (provider: OAuthProvider) => void;
+  /** Whether an OAuth redirect is in progress. */
+  isLoading?: boolean;
 };
 
 /**
@@ -33,7 +33,7 @@ type SocialSignInProps = {
  * picks the provider (click, arrow keys, or swipe anywhere on the pill); the
  * rest of the pill continues with it, and its label slides to match.
  */
-export function SocialSignIn({ label, onContinue }: SocialSignInProps) {
+export function SocialSignIn({ label, onContinue, isLoading }: SocialSignInProps) {
   const [index, setIndex] = useState(0);
   // Which way the label slides in: from the right when moving to the next provider.
   const [direction, setDirection] = useState<"next" | "prev">("next");
@@ -82,7 +82,7 @@ export function SocialSignIn({ label, onContinue }: SocialSignInProps) {
       onPointerUp={onPointerUp}
       onPointerCancel={() => (dragStartX.current = null)}
       // Lets touch swipes reach us instead of scrolling the page sideways.
-      className="flex h-11 w-full touch-pan-y items-center gap-1 rounded-full bg-foreground p-1 text-background transition-colors select-none hover:bg-white"
+      className="group flex h-11 w-full touch-pan-y items-center gap-1 rounded-full bg-foreground p-1 text-background shadow-[0_2px_12px_rgba(255,255,255,0.12)] transition-all duration-200 select-none hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_4px_20px_rgba(255,255,255,0.25)] active:translate-y-0"
     >
       <div
         role="radiogroup"
@@ -108,9 +108,11 @@ export function SocialSignIn({ label, onContinue }: SocialSignInProps) {
             tabIndex={i === index ? 0 : -1}
             onClick={() => select(i)}
             onKeyDown={onRadioKeyDown}
+            disabled={isLoading}
             className={cn(
-              "relative z-10 grid place-items-center rounded-full transition-opacity",
+              "relative z-10 grid place-items-center rounded-full transition-opacity active:scale-95",
               i === index ? "opacity-100" : "opacity-45 hover:opacity-80",
+              isLoading && "pointer-events-none opacity-50",
             )}
           >
             <Logo className="size-4" />
@@ -120,6 +122,7 @@ export function SocialSignIn({ label, onContinue }: SocialSignInProps) {
 
       <button
         type="button"
+        disabled={isLoading}
         onClick={() => {
           // A swipe that ends on this button must not also count as a click.
           if (swiped.current) {
@@ -128,7 +131,7 @@ export function SocialSignIn({ label, onContinue }: SocialSignInProps) {
           }
           onContinue(provider.id);
         }}
-        className="flex h-full min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full px-3 text-xs font-bold tracking-wide sm:text-sm"
+        className="flex h-full min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full px-3 text-xs font-bold tracking-wide active:scale-[0.98] active:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm [&_svg]:transition-transform [&_svg]:duration-200 group-hover:[&_svg]:translate-x-1"
       >
         {/* Re-keyed per provider so the slide-in replays on every switch. */}
         <span
@@ -140,8 +143,17 @@ export function SocialSignIn({ label, onContinue }: SocialSignInProps) {
               : "motion-safe:animate-swipe-from-left",
           )}
         >
-          {label} {provider.name}
-          <ArrowRight className="size-4" strokeWidth={2.25} />
+          {isLoading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Redirecting…
+            </>
+          ) : (
+            <>
+              {label} {provider.name}
+              <ArrowRight className="size-4" strokeWidth={2.25} />
+            </>
+          )}
         </span>
       </button>
     </div>
