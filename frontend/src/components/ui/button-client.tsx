@@ -13,7 +13,7 @@ import type { Route } from "next";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
-import { buttonVariants, type ButtonSize, type ButtonVariant } from "./button";
+import { buttonVariants, type ButtonSize, type ButtonVariant } from "./button-variants";
 
 interface CommonButtonProps {
   variant?: ButtonVariant;

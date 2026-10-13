@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { BrandBackdrop } from "@/components/layout/brand-backdrop";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 export function Hero() {
   return (

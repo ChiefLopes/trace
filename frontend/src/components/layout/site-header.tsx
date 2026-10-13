@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { UserMenu } from "@/components/layout/user-menu";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { authNav, mainNav } from "@/config/navigation";
 import { siteConfig } from "@/config/site";
 import { logoutAction } from "@/features/auth/actions";

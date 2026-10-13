@@ -90,10 +90,11 @@ export async function signSession(payload: SessionPayload): Promise<string> {
 /** The session in a cookie value, or null if it is missing, forged, malformed or expired. */
 export async function verifySessionToken(
   token: string | undefined,
-  now = Date.now(),
+  now?: number,
 ): Promise<SessionPayload | null> {
+  if (!token) return null;
   const secret = sessionSecret();
-  if (!token || !secret || token.length > 4096) return null;
+  if (!secret || token.length > 4096) return null;
 
   const [body, signature, ...rest] = token.split(".");
   if (!body || !signature || rest.length > 0) return null;
@@ -118,6 +119,7 @@ export async function verifySessionToken(
     return null;
   }
   const parsed = sessionPayloadSchema.safeParse(json);
-  if (!parsed.success || parsed.data.exp * 1000 <= now) return null;
+  const currentTime = now ?? Date.now();
+  if (!parsed.success || parsed.data.exp * 1000 <= currentTime) return null;
   return parsed.data;
 }

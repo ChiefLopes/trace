@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { TraceLoader } from "@/components/feedback/trace-loader";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils/cn";
 import { getCurrentUser } from "@/features/auth/session";
 import { caseIds } from "@/features/cases/data";
