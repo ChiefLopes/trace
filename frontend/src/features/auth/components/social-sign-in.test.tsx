@@ -69,4 +69,18 @@ describe("SocialSignIn", () => {
     fireEvent.pointerUp(button, { clientX: 200 });
     expect(action()).toHaveTextContent("Sign up with Google");
   });
+
+  it("renders only Google when showX is false", async () => {
+    const onContinue = vi.fn();
+    const user = userEvent.setup();
+    render(<SocialSignIn label="Continue with" onContinue={onContinue} showX={false} />);
+
+    expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "X" })).not.toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Continue with Google" });
+    expect(button).toBeInTheDocument();
+
+    await user.click(button);
+    expect(onContinue).toHaveBeenCalledWith("google");
+  });
 });
