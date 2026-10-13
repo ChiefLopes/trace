@@ -76,6 +76,7 @@ export function AddEvidenceButton({
       if (res.status === "added") {
         toast.success("Evidence saved to your notebook");
         setNotes("");
+        setIsOpen(false);
         try {
           const freshList = await getCaseEvidenceAction(caseId);
           setEvidenceList(freshList);
