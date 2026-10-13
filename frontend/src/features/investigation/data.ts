@@ -162,6 +162,91 @@ const workspaces: Record<string, Workspace> = {
       target: { kind: "transaction", id: "tx-3" },
     },
   },
+  "case-002": {
+    caseId: "case-002",
+    caseNumber: "Case 002",
+    codename: "Operation Secp256k1 Bypass",
+    objectives: [
+      {
+        text: "Inspect the signature verification bypass transaction (tx-verify-bypass)",
+        done: false,
+      },
+      { text: "Examine the fraudulent Guardian post_vaa authorization record", done: false },
+      {
+        text: "Trace the complete_wrapped mint transaction that spawned 120,000 wETH",
+        done: false,
+      },
+      { text: "Trace the capital outflow bridging 93,750 ETH across to Ethereum", done: false },
+      {
+        text: "Submit your forensic conclusion on the exploit vector and exit address",
+        done: false,
+      },
+    ],
+    investigator: { rank: "Veteran Investigator", state: "Investigating" },
+    hint: "Examine the instruction sysvar account injection during the verify signatures call.",
+    investigating: {
+      id: "wormhole-bridge",
+      label: "Wormhole Solana Core Bridge",
+      address: "wormDTUJ...LBCgUb",
+      balanceLamports: 120_000 * SOL,
+      transactionCount: 1542,
+      tokenCount: 42,
+    },
+    timeline: [
+      {
+        id: "tx-verify-bypass",
+        time: "18:24:00",
+        direction: "in",
+        amountLamports: 0,
+        counterparty: "Attacker Contract",
+        flagged: true,
+      },
+      {
+        id: "tx-post-vaa",
+        time: "18:26:12",
+        direction: "in",
+        amountLamports: 0,
+        counterparty: "Fake Guardian VAA",
+        flagged: true,
+      },
+      {
+        id: "tx-mint-weth",
+        time: "18:28:45",
+        direction: "out",
+        amountLamports: 120_000 * SOL,
+        counterparty: "Attacker Wallet",
+        flagged: true,
+      },
+      {
+        id: "tx-bridge-eth",
+        time: "18:35:10",
+        direction: "out",
+        amountLamports: 93_750 * SOL,
+        counterparty: "0x629e...71A",
+        flagged: true,
+      },
+    ],
+    trail: [
+      { id: "wormhole-bridge", label: "Wormhole Core", address: "wormDTUJ...LBCgUb" },
+      { id: "attacker-wallet", label: "Attacker Solana Wallet", address: "ATk9...44PQ" },
+      { id: "eth-bridge", label: "Ethereum Outflow", address: "0x629e...71A" },
+    ],
+    otherWallets: [
+      { id: "guardian-1", label: "Guardian Node 1", address: "Guar1...99AA" },
+      { id: "guardian-2", label: "Guardian Node 2", address: "Guar2...88BB" },
+    ],
+    evidenceCount: 0,
+    lead: {
+      id: "lead-bypass",
+      badge: "EXPLOIT",
+      trigger: "arrival",
+      title: "Signature Verification Bypass",
+      message:
+        "The attacker called verify_signatures with an account replacing the instruction sysvar.",
+      actionLabel: "Analyze Verification",
+      target: { kind: "transaction", id: "tx-verify-bypass" },
+    },
+  },
 };
 
 /** MOCK type for transaction - matches component expectations */

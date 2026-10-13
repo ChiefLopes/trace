@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { TraceLoader } from "@/components/feedback/trace-loader";
+import { getNextOpenCaseId } from "@/features/cases/active-case";
+import { caseRoutes } from "@/features/cases/routes";
 import { CaseSolved } from "@/features/investigation/components/case-solved";
 import { getCaseOutcome } from "@/features/investigation/outcome";
 import { getSelectedInvestigator } from "@/features/investigators/selection";
@@ -32,6 +34,9 @@ async function OutcomeContent({ params }: Pick<Props, "params">) {
 
   const art = investigator.fullBody ?? investigator.image;
 
+  const nextCaseId =
+    (await getNextOpenCaseId(caseId)) ?? (caseId === "case-001" ? "case-002" : "case-001");
+
   return (
     <>
       {/* Centered on mobile/tablet, 78px inside <main> on desktop */}
@@ -40,7 +45,7 @@ async function OutcomeContent({ params }: Pick<Props, "params">) {
           outcome={outcome}
           portrait={{ ...art, alt: investigator.description }}
           homeHref={"/dashboard" as Route}
-          nextCaseHref={"/cases" as Route}
+          nextCaseHref={caseRoutes.briefing(nextCaseId)}
         />
       </div>
 

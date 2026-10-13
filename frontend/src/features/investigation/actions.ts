@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { closeCase } from "@/features/cases/active-case";
 import { caseRoutes } from "@/features/cases/routes";
 import { submitCaseTheory } from "@/features/evidence/server-api";
 
@@ -14,8 +15,13 @@ export async function verifyAndSolveCaseAction(caseId: string, destinationWallet
         "Traced 20 SOL from treasury through intermediary wallets and hopped to exchange where it was cashed out.",
     });
 
+    await closeCase(caseId);
+
     revalidatePath(caseRoutes.outcome(caseId));
     revalidatePath(caseRoutes.workspace(caseId));
+    revalidatePath("/dashboard");
+    revalidatePath("/cases");
+    revalidatePath("/(dashboard)", "layout");
 
     return {
       success: true,

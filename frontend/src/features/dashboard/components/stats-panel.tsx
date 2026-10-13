@@ -43,7 +43,14 @@ export function StatsPanel({
       <div className="flex w-full max-w-[1152px] flex-col gap-[14px]">
         <dl className="grid grid-cols-2 gap-[14px] lg:flex">
           <StatCard label="Active case" value={activeCase ? activeCase.label.toUpperCase() : "—"} />
-          <StatCard label="Objectives" value={`${objectives.completed} / ${objectives.total}`} />
+          <StatCard
+            label="Objectives"
+            value={
+              activeCase && objectives.total > 0
+                ? `${objectives.completed} / ${objectives.total}`
+                : "—"
+            }
+          />
           <StatCard label="Evidence" value={String(evidenceCount)} />
           <StatCard label="Academy" value={`${academy.completed}  /  ${academy.total}`} />
         </dl>

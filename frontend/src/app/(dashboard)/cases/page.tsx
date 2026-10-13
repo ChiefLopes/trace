@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
+import { getNextOpenCaseId } from "@/features/cases/active-case";
 import { caseRoutes } from "@/features/cases/routes";
 import { getDashboardSummary } from "@/features/dashboard/data";
 
@@ -8,10 +9,16 @@ import { getDashboardSummary } from "@/features/dashboard/data";
 export const instant = false;
 
 /**
- * Placeholder until the cases list is designed: open the player's active
- * case, or send them to pick an investigator on the dashboard.
+ * Open the player's active case, or the next available open case if the previous one is closed.
  */
 export default async function CasesPage() {
   const { activeCase } = await getDashboardSummary();
-  redirect(activeCase ? caseRoutes.briefing(activeCase.id) : ("/dashboard" as Route));
+  if (activeCase) {
+    redirect(caseRoutes.briefing(activeCase.id));
+  }
+  const nextCaseId = await getNextOpenCaseId();
+  if (nextCaseId) {
+    redirect(caseRoutes.briefing(nextCaseId));
+  }
+  redirect("/dashboard" as Route);
 }

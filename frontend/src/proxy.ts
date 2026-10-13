@@ -90,7 +90,44 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // When opening a case route, set it as the active case and unmark it from closed cases
+  const caseMatch = pathname.match(/^\/(?:cases|investigation)\/([a-zA-Z0-9_-]+)/);
+  if (caseMatch && !isPrefetch(request)) {
+    const caseId = caseMatch[1];
+    if (caseId && !["file", "accept", "outcome"].includes(caseId)) {
+      response.cookies.set("trace_active_case", caseId, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+      });
+
+      // If this case was previously closed, remove it from closed cases cookie so it's fresh
+      const closedCookie = request.cookies.get("trace_closed_cases")?.value;
+      if (closedCookie) {
+        try {
+          const closedList = JSON.parse(closedCookie);
+          if (Array.isArray(closedList) && closedList.includes(caseId)) {
+            const updated = closedList.filter((id: string) => id !== caseId);
+            response.cookies.set("trace_closed_cases", JSON.stringify(updated), {
+              httpOnly: true,
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production",
+              path: "/",
+              maxAge: 60 * 60 * 24 * 30,
+            });
+          }
+        } catch {
+          // ignore parsing error
+        }
+      }
+    }
+  }
+
+  return response;
 }
 
 export const config = {
