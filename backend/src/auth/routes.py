@@ -35,6 +35,14 @@ from src.auth.models import (
     WalletChallengeRequest,
     WalletChallengeResponse,
     WalletVerifyRequest,
+    XAuthRequest,
+    XAuthUrlResponse,
+)
+from src.auth.x import (
+    exchange_x_code,
+    get_x_auth_url,
+    get_x_user_profile,
+    save_state_to_redis,
 )
 from src.database.storage import storage
 
@@ -178,37 +186,8 @@ async def logout(
     return None
 
 
-@router.get("/google/url", response_model=GoogleAuthUrlResponse)
-async def google_auth_url():
-    """Get the Google OAuth2 consent screen URL for redirect flow."""
-    return GoogleAuthUrlResponse(url=get_google_auth_url())
-
-
-@router.post("/google", response_model=AuthResponse)
-async def google_auth(req: GoogleAuthRequest):
-    """
-    Authenticate or register a user with Google Sign-In (ID Token, One Tap Credential, or Auth Code).
-    Returns a Bearer JWT with TTL.
-    """
-    token_str = req.credential or req.idToken
-    user_info = None
-
-    if token_str:
-        user_info = await verify_google_id_token(token_str)
-    elif req.code:
-        user_info = await exchange_google_code(req.code)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Google credential, idToken, or authorization code is required",
-        )
-
-    if not user_info:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Google authentication failed or token is invalid",
-        )
-
+async def _authenticate_google_user(user_info: dict[str, Any]) -> AuthResponse:
+    """Helper to find or create a user by Google email and issue JWT session."""
     email = user_info.get("email")
     if not email:
         raise HTTPException(
@@ -234,6 +213,241 @@ async def google_auth(req: GoogleAuthRequest):
         tokenType="Bearer",
         expiresIn=ttl,
     )
+
+
+@router.get("/google/url", response_model=GoogleAuthUrlResponse)
+@router.get("/google/signin/url", response_model=GoogleAuthUrlResponse)
+@router.get("/signin/google/url", response_model=GoogleAuthUrlResponse)
+async def google_auth_url():
+    """Get the Google OAuth2 consent screen URL for redirect flow."""
+    return GoogleAuthUrlResponse(url=get_google_auth_url())
+
+
+@router.post("/google", response_model=AuthResponse)
+@router.post("/google/signin", response_model=AuthResponse)
+@router.post("/google/login", response_model=AuthResponse)
+@router.post("/signin/google", response_model=AuthResponse)
+@router.post("/login/google", response_model=AuthResponse)
+async def google_auth(req: GoogleAuthRequest):
+    """
+    Authenticate or register a user with Google Sign-In (ID Token, One Tap Credential, or Auth Code).
+    Returns a Bearer JWT with TTL.
+    """
+    token_str = req.credential or req.idToken
+    user_info = None
+
+    if token_str:
+        user_info = await verify_google_id_token(token_str)
+    elif req.code:
+        user_info = await exchange_google_code(req.code)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google credential, idToken, or authorization code is required",
+        )
+
+    if not user_info:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google authentication failed or token is invalid",
+        )
+
+    return await _authenticate_google_user(user_info)
+
+
+@router.get("/google/callback", response_model=AuthResponse)
+async def google_callback(
+    code: str | None = None,
+    error: str | None = None,
+    state: str | None = None,
+):
+    """
+    Handle Google OAuth2 redirect callback with authorization code.
+    Exchanges code for user credentials and returns a Bearer JWT.
+    """
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Google OAuth error: {error}",
+        )
+
+    if not code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google authorization code is required",
+        )
+
+    user_info = await exchange_google_code(code)
+    if not user_info:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google authentication failed or code is invalid",
+        )
+
+    return await _authenticate_google_user(user_info)
+
+
+@router.post("/google/callback", response_model=AuthResponse)
+async def google_callback_post(req: GoogleAuthRequest):
+    """Handle Google OAuth2 POST callback (e.g. form_post or JSON payload)."""
+    return await google_auth(req)
+
+
+async def _authenticate_x_user(user_info: dict[str, Any]) -> AuthResponse:
+    """Helper to find or create a user by X (Twitter) account and issue JWT session."""
+    x_id = user_info.get("id") or user_info.get("sub")
+    if not x_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="X account did not return a user ID",
+        )
+
+    x_id_str = str(x_id)
+    x_username = user_info.get("username")
+    name = user_info.get("name")
+    email = user_info.get("email")
+
+    user = await storage.get_user_by_x_id(x_id_str)
+    if not user and email:
+        user = await storage.get_user_by_email(email)
+        if user:
+            await storage.link_x_account(user.id, x_id_str, x_username)
+            user.x_id = x_id_str
+            if x_username:
+                user.x_username = x_username
+
+    if not user:
+        display_name = name or x_username or f"Agent_{x_id_str[:6]}"
+        user = await storage.create_user(
+            email=email,
+            username=display_name,
+            x_id=x_id_str,
+            x_username=x_username,
+        )
+    elif x_username and user.x_username != x_username:
+        await storage.link_x_account(user.id, x_id_str, x_username)
+        user.x_username = x_username
+
+    token, _, ttl = create_access_token(
+        {
+            "sub": user.id,
+            "email": user.email,
+            "username": user.username,
+            "x_id": user.x_id,
+        }
+    )
+    return AuthResponse(
+        user=UserResponse(**user.to_dict()),
+        token=token,
+        tokenType="Bearer",
+        expiresIn=ttl,
+    )
+
+
+@router.get("/x/url", response_model=XAuthUrlResponse)
+@router.get("/x/signin/url", response_model=XAuthUrlResponse)
+@router.get("/signin/x/url", response_model=XAuthUrlResponse)
+@router.get("/twitter/url", response_model=XAuthUrlResponse)
+async def x_auth_url(
+    redirect_uri: str | None = None,
+    state: str | None = None,
+    code_verifier: str | None = None,
+):
+    """Get the X (Twitter) OAuth 2.0 PKCE consent screen URL."""
+    auth_data = get_x_auth_url(
+        redirect_uri=redirect_uri,
+        state=state,
+        code_verifier=code_verifier,
+    )
+    await save_state_to_redis(auth_data["state"], auth_data["code_verifier"])
+    return XAuthUrlResponse(
+        url=auth_data["url"],
+        state=auth_data["state"],
+        codeVerifier=auth_data["code_verifier"],
+    )
+
+
+@router.post("/x", response_model=AuthResponse)
+@router.post("/x/signin", response_model=AuthResponse)
+@router.post("/x/login", response_model=AuthResponse)
+@router.post("/signin/x", response_model=AuthResponse)
+@router.post("/login/x", response_model=AuthResponse)
+@router.post("/twitter", response_model=AuthResponse)
+async def x_auth(req: XAuthRequest):
+    """
+    Authenticate or register a user with X (Twitter) OAuth 2.0 (Auth code or Access Token).
+    Returns a Bearer JWT with TTL.
+    """
+    user_info = None
+
+    if req.access_token:
+        user_info = await get_x_user_profile(req.access_token)
+    elif req.code:
+        user_info = await exchange_x_code(
+            code=req.code,
+            code_verifier=req.code_verifier,
+            state=req.state,
+            redirect_uri=req.redirect_uri,
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="X authorization code or access token is required",
+        )
+
+    if not user_info:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="X authentication failed or credentials are invalid",
+        )
+
+    return await _authenticate_x_user(user_info)
+
+
+@router.get("/x/callback", response_model=AuthResponse)
+@router.get("/callback/x", response_model=AuthResponse)
+@router.get("/twitter/callback", response_model=AuthResponse)
+async def x_callback(
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+    error_description: str | None = None,
+):
+    """
+    Handle X (Twitter) OAuth2 redirect callback with authorization code.
+    Exchanges code with PKCE for user credentials and returns a Bearer JWT.
+    """
+    if error:
+        detail_msg = f"X OAuth error: {error}"
+        if error_description:
+            detail_msg += f" ({error_description})"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail_msg,
+        )
+
+    if not code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="X authorization code is required",
+        )
+
+    user_info = await exchange_x_code(code=code, state=state)
+    if not user_info:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="X authentication failed or code is invalid",
+        )
+
+    return await _authenticate_x_user(user_info)
+
+
+@router.post("/x/callback", response_model=AuthResponse)
+@router.post("/callback/x", response_model=AuthResponse)
+@router.post("/twitter/callback", response_model=AuthResponse)
+async def x_callback_post(req: XAuthRequest):
+    """Handle X (Twitter) OAuth2 POST callback (e.g. JSON payload forwarded from frontend)."""
+    return await x_auth(req)
 
 
 @me_router.get("/me", response_model=CurrentUserResponse)

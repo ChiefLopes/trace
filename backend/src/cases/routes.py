@@ -6,6 +6,7 @@ from src.cases.models import (
     CaseFile,
     CaseOutcome,
     EvidenceItemRequest,
+    EvidenceItemResponse,
     EvidencePrompt,
     EvidenceSubmissionRequest,
     TransactionDetail,
@@ -73,42 +74,59 @@ async def get_transaction(case_id: str, tx_id: str):
 
 
 # Evidence Notebook
-@router.get("/{case_id}/evidence")
+@router.get("/{case_id}/evidence", response_model=list[EvidenceItemResponse])
 async def list_evidence(
     case_id: str,
-    user: Annotated[UserRecord, Depends(get_current_user)],
-):
+    user: Annotated[UserRecord | None, Depends(get_current_user_optional)],
+) -> list[EvidenceItemResponse]:
     """List the player's saved evidence for this case."""
-    items = await storage.get_evidence_list(user.id, case_id)
-    return [item.to_dict() for item in items]
+    user_id = user.id if user else "guest"
+    items = await storage.get_evidence_list(user_id, case_id)
+    return [
+        EvidenceItemResponse(
+            id=item.id,
+            kind=item.kind,
+            targetId=item.target_id,
+            label=item.label,
+        )
+        for item in items
+    ]
 
 
-@router.post("/{case_id}/evidence", status_code=status.HTTP_201_CREATED)
+@router.post("/{case_id}/evidence", status_code=status.HTTP_201_CREATED, response_model=EvidenceItemResponse)
 async def add_evidence(
     case_id: str,
     req: EvidenceItemRequest,
-    user: Annotated[UserRecord, Depends(get_current_user)],
-):
+    user: Annotated[UserRecord | None, Depends(get_current_user_optional)],
+) -> EvidenceItemResponse:
     """Pin a wallet or transaction to the player's evidence notebook."""
+    user_id = user.id if user else "guest"
     item = await storage.add_evidence(
-        user_id=user.id,
+        user_id=user_id,
         case_id=case_id,
         kind=req.kind,
         target_id=req.targetId,
         label=req.label,
         notes=req.notes,
+        evidence_id=req.id,
     )
-    return item.to_dict()
+    return EvidenceItemResponse(
+        id=item.id,
+        kind=item.kind,
+        targetId=item.target_id,
+        label=item.label,
+    )
 
 
 @router.delete("/{case_id}/evidence/{evidence_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_evidence(
     case_id: str,
     evidence_id: str,
-    user: Annotated[UserRecord, Depends(get_current_user)],
+    user: Annotated[UserRecord | None, Depends(get_current_user_optional)],
 ):
     """Unpin an evidence item."""
-    removed = await storage.remove_evidence(user.id, case_id, evidence_id)
+    user_id = user.id if user else "guest"
+    removed = await storage.remove_evidence(user_id, case_id, evidence_id)
     if not removed:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence item not found")
     return None

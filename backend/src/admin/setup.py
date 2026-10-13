@@ -24,10 +24,12 @@ class UserAdminView(ModelView):
         "role",
         "is_admin",
         "wallet_address",
+        "x_id",
+        "x_username",
         "selected_investigator_id",
         "created_at",
     ]
-    searchable_fields = ["username", "email", "wallet_address", "role"]
+    searchable_fields = ["username", "email", "wallet_address", "x_id", "x_username", "role"]
     sortable_fields = ["created_at", "username", "role", "is_admin"]
     exclude_fields_from_create = ["id", "created_at"]
 

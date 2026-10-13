@@ -12,6 +12,7 @@ import {
   signup as signupApi,
   logout as logoutApi,
   getGoogleAuthUrl as getGoogleAuthUrlApi,
+  getXAuthUrl as getXAuthUrlApi,
 } from "./server-api";
 import { clearFailures, recordFailure, retryAfterMinutes } from "./rate-limit";
 import { AFTER_LOGIN, LOGIN_PAGE, safeRedirectPath } from "./routes";
@@ -113,5 +114,21 @@ export async function getGoogleAuthUrlAction(): Promise<{ url: string } | { erro
   } catch (error) {
     if (error instanceof ApiError) return { error: error.message };
     return { error: "Google sign-in is temporarily unavailable. Please try again." };
+  }
+}
+
+/** Retrieve the X (Twitter) OAuth 2.0 authorization URL from the backend. */
+export async function getXAuthUrlAction(): Promise<{ url: string } | { error: string }> {
+  try {
+    const redirectUri =
+      process.env.NODE_ENV === "production"
+        ? "https://trace-brown-ten.vercel.app/api/auth/callback/x"
+        : "http://localhost:3000/api/auth/callback/x";
+
+    const res = await getXAuthUrlApi(redirectUri);
+    return { url: res.url };
+  } catch (error) {
+    if (error instanceof ApiError) return { error: error.message };
+    return { error: "X sign-in is temporarily unavailable. Please try again." };
   }
 }

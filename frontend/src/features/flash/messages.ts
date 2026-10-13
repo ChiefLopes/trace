@@ -48,6 +48,11 @@ export const FLASH_MESSAGES = {
     title: "Google authentication failed",
     description: "Could not complete sign-in. Please try again.",
   },
+  "x-auth-failed": {
+    type: "error",
+    title: "X authentication failed",
+    description: "Could not complete sign-in with X. Please try again.",
+  },
 } as const satisfies Record<
   string,
   { type: "success" | "info" | "warning" | "error"; title: string; description?: string }

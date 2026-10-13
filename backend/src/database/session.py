@@ -44,10 +44,23 @@ def get_async_session_maker() -> async_sessionmaker[AsyncSession]:
 
 
 async def init_db(engine: AsyncEngine | None = None) -> None:
-    """Create all SQLModel database tables if they do not exist."""
+    """Create all SQLModel database tables if they do not exist, ensuring schema columns."""
     active_engine = engine or get_async_engine()
     async with active_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+
+        def sync_upgrade(connection):
+            from sqlalchemy import inspect, text
+
+            inspector = inspect(connection)
+            if "users" in inspector.get_table_names():
+                existing_cols = {c["name"] for c in inspector.get_columns("users")}
+                if "x_id" not in existing_cols:
+                    connection.execute(text("ALTER TABLE users ADD COLUMN x_id VARCHAR"))
+                if "x_username" not in existing_cols:
+                    connection.execute(text("ALTER TABLE users ADD COLUMN x_username VARCHAR"))
+
+        await conn.run_sync(sync_upgrade)
 
 
 async def close_db() -> None:

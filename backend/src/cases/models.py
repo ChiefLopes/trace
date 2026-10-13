@@ -157,10 +157,18 @@ class EvidencePrompt(BaseModel):
 
 
 class EvidenceItemRequest(BaseModel):
+    id: str | None = None
     kind: Literal["wallet", "transaction"]
     targetId: str
     label: str
     notes: str | None = None
+
+
+class EvidenceItemResponse(BaseModel):
+    id: str
+    kind: str
+    targetId: str
+    label: str
 
 
 class EvidenceSubmissionRequest(BaseModel):

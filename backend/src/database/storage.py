@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import json
 from typing import Any
 import uuid
-from sqlmodel import delete, select
+from sqlmodel import delete, or_, select
 from src.database.models import (
     CaseOutcomeRecord,
     CaseRecord,
@@ -24,6 +24,8 @@ class DatabaseStorage:
         username: str | None = None,
         wallet_address: str | None = None,
         password_hash: str | None = None,
+        x_id: str | None = None,
+        x_username: str | None = None,
         selected_investigator_id: str = "tracy",
         role: str = "player",
         is_admin: bool = False,
@@ -31,6 +33,10 @@ class DatabaseStorage:
         if not username:
             if wallet_address:
                 username = f"Agent_{wallet_address[:4]}..{wallet_address[-4:]}"
+            elif x_username:
+                username = x_username
+            elif x_id:
+                username = f"Agent_{x_id[:6]}"
             else:
                 username = "Agent"
 
@@ -40,6 +46,8 @@ class DatabaseStorage:
             username=username,
             wallet_address=wallet_address,
             password_hash=password_hash,
+            x_id=x_id,
+            x_username=x_username,
             selected_investigator_id=selected_investigator_id,
             role=role,
             is_admin=is_admin,
@@ -49,6 +57,28 @@ class DatabaseStorage:
             session.add(user)
             await session.commit()
             await session.refresh(user)
+            return user
+
+    async def get_user_by_x_id(self, x_id: str) -> UserRecord | None:
+        session_factory = get_async_session_maker()
+        async with session_factory() as session:
+            result = await session.exec(select(UserRecord).where(UserRecord.x_id == x_id))
+            return result.first()
+
+    async def link_x_account(
+        self, user_id: str, x_id: str, x_username: str | None = None
+    ) -> UserRecord | None:
+        session_factory = get_async_session_maker()
+        async with session_factory() as session:
+            result = await session.exec(select(UserRecord).where(UserRecord.id == user_id))
+            user = result.first()
+            if user:
+                user.x_id = x_id
+                if x_username:
+                    user.x_username = x_username
+                session.add(user)
+                await session.commit()
+                await session.refresh(user)
             return user
 
     async def get_user_by_id(self, user_id: str) -> UserRecord | None:
@@ -140,6 +170,7 @@ class DatabaseStorage:
         target_id: str,
         label: str,
         notes: str | None = None,
+        evidence_id: str | None = None,
     ) -> EvidenceRecord:
         session_factory = get_async_session_maker()
         async with session_factory() as session:
@@ -160,8 +191,9 @@ class DatabaseStorage:
                     await session.refresh(existing)
                 return existing
 
+            new_id = evidence_id if evidence_id else f"evidence-{uuid.uuid4().hex[:8]}"
             evidence_item = EvidenceRecord(
-                id=str(uuid.uuid4()),
+                id=new_id,
                 user_id=user_id,
                 case_id=case_id,
                 kind=kind,
@@ -192,10 +224,21 @@ class DatabaseStorage:
                 select(EvidenceRecord).where(
                     EvidenceRecord.user_id == user_id,
                     EvidenceRecord.case_id == case_id,
-                    EvidenceRecord.id == evidence_id,
+                    or_(
+                        EvidenceRecord.id == evidence_id,
+                        EvidenceRecord.target_id == evidence_id,
+                    ),
                 )
             )
             item = result.first()
+            if not item:
+                result = await session.exec(
+                    select(EvidenceRecord).where(
+                        EvidenceRecord.case_id == case_id,
+                        EvidenceRecord.id == evidence_id,
+                    )
+                )
+                item = result.first()
             if item:
                 await session.delete(item)
                 await session.commit()

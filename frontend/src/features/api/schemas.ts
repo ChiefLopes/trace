@@ -9,6 +9,8 @@ export interface UserResponse {
   email: string | null;
   username: string;
   walletAddress: string | null;
+  xId?: string | null;
+  xUsername?: string | null;
   selectedInvestigatorId: string;
   createdAt: string;
 }
@@ -22,6 +24,8 @@ const userResponseSchema = z.object({
   email: z.string().nullable(),
   username: z.string(),
   walletAddress: z.string().nullable(),
+  xId: z.string().nullable().optional(),
+  xUsername: z.string().nullable().optional(),
   selectedInvestigatorId: z.string().default("tracy"),
   createdAt: z.string(),
 });
@@ -94,6 +98,24 @@ export const googleAuthUrlResponseSchema = z.object({
 });
 
 export type GoogleAuthUrlResponse = z.infer<typeof googleAuthUrlResponseSchema>;
+
+export interface XAuthRequest {
+  code: string;
+  codeVerifier: string;
+  redirectUri?: string | null;
+}
+
+const xAuthRequestSchema = z.object({
+  code: z.string(),
+  codeVerifier: z.string(),
+  redirectUri: z.string().nullable().optional(),
+});
+
+export const xAuthUrlResponseSchema = z.object({
+  url: z.string(),
+});
+
+export type XAuthUrlResponse = z.infer<typeof xAuthUrlResponseSchema>;
 
 export interface SessionResponse {
   user: UserResponse | null;
@@ -513,6 +535,7 @@ export {
   userResponseSchema,
   authResponseSchema,
   googleAuthRequestSchema,
+  xAuthRequestSchema,
   sessionResponseSchema,
   knownInformationSchema,
   caseFileSchema,

@@ -21,11 +21,11 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
-  "connect-src 'self' https://accounts.google.com",
+  "connect-src 'self' https://accounts.google.com https://api.x.com https://x.com",
   "object-src 'none'",
   "base-uri 'self'",
   // OAuth providers for social sign-in redirects.
-  "form-action 'self' https://accounts.google.com",
+  "form-action 'self' https://accounts.google.com https://x.com",
   "frame-ancestors 'none'",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");

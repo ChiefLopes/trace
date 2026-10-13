@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     allowed_origins: list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://trace-brown-ten.vercel.app",
     ]
     admin_username: str = "admin"
     admin_email: str = "admin@tracegame.io"
@@ -24,6 +25,11 @@ class Settings(BaseSettings):
     google_client_id: str | None = None
     google_client_secret: str | None = None
     google_redirect_uri: str = "http://localhost:3000/api/auth/callback/google"
+
+    # X (Twitter) OAuth 2.0 / Sign-In
+    x_client_id: str | None = "WUx3VGlXa3lMbkQ5enZJREo0Y046MTpjaQ"
+    x_client_secret: str | None = "mgrATPlbkDcQhNdI04XEtXIqIy-4rTK9fRGfuPK1L_gQ07mQ8t"
+    x_redirect_uri: str = "https://trace-brown-ten.vercel.app/api/auth/callback/x"
 
     @property
     def async_database_url(self) -> str:

@@ -13,7 +13,7 @@ import { Field, fieldErrorId } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 
-import { getGoogleAuthUrlAction, loginAction } from "../actions";
+import { getGoogleAuthUrlAction, getXAuthUrlAction, loginAction } from "../actions";
 import { loginSchema } from "../schemas";
 import { FormAlert } from "@/components/ui/form-alert";
 import { type OAuthProvider, oauthProviderName, SocialSignIn } from "./social-sign-in";
@@ -47,6 +47,27 @@ export function LoginForm() {
           toast.info("Google Sign-In is not configured yet", {
             description:
               "Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your environment variables.",
+          });
+          setIsSocialLoading(false);
+          return;
+        }
+        window.location.href = result.url;
+      } catch {
+        toast.error("Couldn't reach the server. Please try again.");
+        setIsSocialLoading(false);
+      }
+    } else if (provider === "x") {
+      setIsSocialLoading(true);
+      try {
+        const result = await getXAuthUrlAction();
+        if ("error" in result) {
+          toast.error(result.error);
+          setIsSocialLoading(false);
+          return;
+        }
+        if (result.url.includes("X_CLIENT_ID_NOT_CONFIGURED")) {
+          toast.info("X Sign-In is not configured yet", {
+            description: "Add X_CLIENT_ID and X_CLIENT_SECRET to your environment variables.",
           });
           setIsSocialLoading(false);
           return;

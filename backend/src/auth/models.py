@@ -33,6 +33,8 @@ class UserResponse(BaseModel):
     email: str | None = None
     username: str
     walletAddress: str | None = None
+    xId: str | None = None
+    xUsername: str | None = None
     selectedInvestigatorId: str = "tracy"
     createdAt: str
 
@@ -57,6 +59,22 @@ class GoogleAuthRequest(BaseModel):
 
 class GoogleAuthUrlResponse(BaseModel):
     url: str
+
+
+class XAuthRequest(BaseModel):
+    code: str | None = None
+    state: str | None = None
+    code_verifier: str | None = Field(default=None, alias="codeVerifier")
+    redirect_uri: str | None = Field(default=None, alias="redirectUri")
+    access_token: str | None = Field(default=None, alias="accessToken")
+
+    model_config = {"populate_by_name": True}
+
+
+class XAuthUrlResponse(BaseModel):
+    url: str
+    state: str | None = None
+    codeVerifier: str | None = None
 
 
 class AvatarObject(BaseModel):

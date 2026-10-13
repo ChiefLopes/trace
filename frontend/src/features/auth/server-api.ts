@@ -13,6 +13,8 @@ import {
   walletVerifyRequestSchema,
   googleAuthRequestSchema,
   googleAuthUrlResponseSchema,
+  xAuthRequestSchema,
+  xAuthUrlResponseSchema,
   sessionResponseSchema,
 } from "@/features/api/schemas";
 
@@ -25,6 +27,8 @@ import type {
   WalletVerifyRequest,
   GoogleAuthRequest,
   GoogleAuthUrlResponse,
+  XAuthRequest,
+  XAuthUrlResponse,
   SessionResponse,
 } from "@/features/api/schemas";
 
@@ -67,4 +71,14 @@ export async function getGoogleAuthUrl(): Promise<GoogleAuthUrlResponse> {
 export async function googleAuth(values: GoogleAuthRequest): Promise<AuthResponse> {
   const parsed = googleAuthRequestSchema.parse(values);
   return serverApi.post("/api/auth/google", authResponseSchema, { body: parsed });
+}
+
+export async function getXAuthUrl(redirectUri?: string): Promise<XAuthUrlResponse> {
+  const query = redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : "";
+  return serverApi.get(`/api/auth/x/url${query}`, xAuthUrlResponseSchema);
+}
+
+export async function xAuth(values: XAuthRequest): Promise<AuthResponse> {
+  const parsed = xAuthRequestSchema.parse(values);
+  return serverApi.post("/api/auth/x", authResponseSchema, { body: parsed });
 }

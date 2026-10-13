@@ -41,7 +41,9 @@ export function SocialSignIn({
   label,
   onContinue,
   isLoading,
-  showX = process.env.NEXT_PUBLIC_ENABLE_X_AUTH === "true" || process.env.NODE_ENV === "test",
+  showX = process.env.NEXT_PUBLIC_ENABLE_X_AUTH === "true" ||
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test",
 }: SocialSignInProps) {
   const providers = showX ? ALL_PROVIDERS : ALL_PROVIDERS.filter((p) => p.id === "google");
   const [index, setIndex] = useState(0);
