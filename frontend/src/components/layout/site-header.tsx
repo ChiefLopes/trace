@@ -31,6 +31,13 @@ export function SiteHeader({ user }: { user?: CurrentUser | null } = {}) {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
+  const getNavHref = (item: (typeof mainNav)[number]) => {
+    if (item.label === "Pick Character" || item.href === "/characters") {
+      return (user ? "/dashboard" : "/login") as Route;
+    }
+    return item.href;
+  };
+
   return (
     <header className="absolute inset-x-0 top-0 z-30">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 sm:px-8">
@@ -51,21 +58,24 @@ export function SiteHeader({ user }: { user?: CurrentUser | null } = {}) {
 
         <nav aria-label="Main" className="hidden md:block">
           <ul className="flex items-center gap-10 lg:gap-14">
-            {mainNav.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={isActive(item.href) ? "page" : undefined}
-                  className={cn(
-                    "relative py-2 text-xs font-bold tracking-wider text-foreground/85 uppercase transition-colors hover:text-foreground",
-                    "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100",
-                    "aria-[current=page]:text-foreground aria-[current=page]:after:scale-x-100",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            {mainNav.map((item) => {
+              const href = getNavHref(item);
+              return (
+                <li key={item.label}>
+                  <Link
+                    href={href}
+                    aria-current={isActive(href) ? "page" : undefined}
+                    className={cn(
+                      "relative py-2 text-xs font-bold tracking-wider text-foreground/85 uppercase transition-colors hover:text-foreground",
+                      "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100",
+                      "aria-[current=page]:text-foreground aria-[current=page]:after:scale-x-100",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
@@ -109,17 +119,20 @@ export function SiteHeader({ user }: { user?: CurrentUser | null } = {}) {
           className="mx-4 rounded-2xl border border-border bg-background/95 p-4 shadow-2xl backdrop-blur-md md:hidden"
         >
           <ul className="flex flex-col">
-            {mainNav.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={isActive(item.href) ? "page" : undefined}
-                  className="block rounded-lg px-3 py-3 text-sm font-bold tracking-wider uppercase hover:bg-primary aria-[current=page]:text-accent"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            {mainNav.map((item) => {
+              const href = getNavHref(item);
+              return (
+                <li key={item.label}>
+                  <Link
+                    href={href}
+                    aria-current={isActive(href) ? "page" : undefined}
+                    className="block rounded-lg px-3 py-3 text-sm font-bold tracking-wider uppercase hover:bg-primary aria-[current=page]:text-accent"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
           {user ? (
             <div className="mt-3 flex flex-col gap-3 border-t border-border pt-4">

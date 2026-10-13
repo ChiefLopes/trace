@@ -9,10 +9,11 @@ import { cn } from "@/lib/utils/cn";
 
 type UserMenuProps = {
   displayName: string;
-  avatar: { src: string };
+  avatar?: { src: string } | null;
 };
 
-export function UserMenu({ displayName, avatar }: UserMenuProps) {
+export function UserMenu({ displayName, avatar = { src: "/avatar.svg" } }: UserMenuProps) {
+  const avatarSrc = avatar?.src || "/avatar.svg";
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +51,7 @@ export function UserMenu({ displayName, avatar }: UserMenuProps) {
         {/* 36.4px amber disc with the 30.9px photo inset 2.75px. */}
         <span className="ml-[6.2px] grid size-[36.43px] shrink-0 place-items-center rounded-full bg-accent">
           <Image
-            src={avatar.src}
+            src={avatarSrc}
             alt=""
             width={62}
             height={62}
